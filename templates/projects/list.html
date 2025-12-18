@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Projects - PMO AI Assistant{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-center">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Projects</h1>
+        <p class="text-gray-600 mt-2">Manage and monitor your project portfolio</p>
+    </div>
+    {% if can_edit %}
+    <a href="/admin/projects/project/add/" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+        <i class="fas fa-plus mr-2"></i>New Project
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filters -->
+<div class="bg-white rounded-lg shadow-md p-4 mb-6">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <select name="status" class="border rounded-lg px-4 py-2" onchange="this.form.submit()">
+            <option value="">All Status</option>
+            <option value="on_track" {% if request.GET.status == 'on_track' %}selected{% endif %}>On Track</option>
+            <option value="at_risk" {% if request.GET.status == 'at_risk' %}selected{% endif %}>At Risk</option>
+            <option value="delayed" {% if request.GET.status == 'delayed' %}selected{% endif %}>Delayed</option>
+            <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+        </select>
+        
+        <select name="priority" class="border rounded-lg px-4 py-2" onchange="this.form.submit()">
+            <option value="">All Priority</option>
+            <option value="low" {% if request.GET.priority == 'low' %}selected{% endif %}>Low</option>
+            <option value="medium" {% if request.GET.priority == 'medium' %}selected{% endif %}>Medium</option>
+            <option value="high" {% if request.GET.priority == 'high' %}selected{% endif %}>High</option>
+            <option value="critical" {% if request.GET.priority == 'critical' %}selected{% endif %}>Critical</option>
+        </select>
+        
+        <input type="text" name="search" value="{{ request.GET.search }}" 
+               placeholder="Search projects..." 
+               class="border rounded-lg px-4 py-2">
+        
+        <button type="submit" class="bg-gray-100 border rounded-lg px-4 py-2 hover:bg-gray-200 transition">
+            <i class="fas fa-search mr-2"></i>Search
+        </button>
+    </form>
+</div>
+
+<!-- Projects Grid -->
+{% if projects %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for project in projects %}
+    <a href="{% url 'project_detail' project.id %}" 
+       class="bg-white rounded-lg shadow-md p-6 card-hover block hover:no-underline">
+        <div class="flex justify-between items-start mb-4">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900">{{ project.name }}</h3>
+                <p class="text-sm text-gray-600">{{ project.code }}</p>
+            </div>
+            <span class="px-3 py-1 text-xs rounded-full {% if project.status == 'on_track' %}bg-green-100 text-green-800{% elif project.status == 'at_risk' %}bg-orange-100 text-orange-800{% elif project.status == 'delayed' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                {{ project.get_status_display }}
+            </span>
+        </div>
+        
+        <div class="mb-4">
+            <div class="flex justify-between text-sm mb-1">
+                <span class="text-gray-600">Progress</span>
+                <span class="font-semibold">{{ project.completion_percentage }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div class="bg-purple-600 h-2 rounded-full" style="width: {{ project.completion_percentage }}%"></div>
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <span class="text-gray-600">SPI:</span>
+                <span class="font-semibold ml-1 {% if project.spi < 0.9 %}text-red-600{% else %}text-green-600{% endif %}">{{ project.spi }}</span>
+            </div>
+            <div>
+                <span class="text-gray-600">Health:</span>
+                <span class="font-semibold ml-1">{{ project.health_score }}</span>
+            </div>
+            <div>
+                <span class="text-gray-600">Risks:</span>
+                <span class="font-semibold ml-1">{{ project.risks.count }}</span>
+            </div>
+            <div>
+                <span class="text-gray-600">Tasks:</span>
+                <span class="font-semibold ml-1">{{ project.tasks.count }}</span>
+            </div>
+        </div>
+        
+        <div class="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
+            <i class="fas fa-user mr-1"></i>{{ project.project_manager }}
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-lg shadow-md p-12 text-center">
+    <i class="fas fa-folder-open text-6xl text-gray-300 mb-4"></i>
+    <p class="text-gray-500 text-lg">No projects found</p>
+    {% if can_edit %}
+    <a href="/admin/projects/project/add/" class="inline-block mt-4 text-purple-600 hover:text-purple-800">
+        <i class="fas fa-plus mr-2"></i>Create your first project
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - PMO AI Assistant{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">Welcome, {{ user.get_full_name|default:user.username }}!</h1>
+    <p class="text-gray-600 mt-2">Here's your project portfolio overview</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm">My Projects</p>
+                <p class="text-3xl font-bold text-gray-900">{{ total_projects }}</p>
+            </div>
+            <i class="fas fa-folder-open text-4xl text-purple-500"></i>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm">My Tasks</p>
+                <p class="text-3xl font-bold text-gray-900">{{ total_tasks }}</p>
+            </div>
+            <i class="fas fa-tasks text-4xl text-blue-500"></i>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm">Role</p>
+                <p class="text-lg font-bold text-gray-900">{{ user.profile.get_role_display }}</p>
+            </div>
+            <i class="fas fa-user-tag text-4xl text-green-500"></i>
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md p-6 card-hover">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm">Activities</p>
+                <p class="text-3xl font-bold text-gray-900">{{ activities.count }}</p>
+            </div>
+            <i class="fas fa-chart-line text-4xl text-orange-500"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- My Projects -->
+    <div class="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-folder mr-2 text-purple-600"></i>My Projects
+            </h2>
+            <a href="{% url 'projects_list' %}" class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        {% if projects %}
+        <div class="space-y-3">
+            {% for project in projects %}
+            <a href="{% url 'project_detail' project.id %}" 
+               class="block border-l-4 {% if project.status == 'on_track' %}border-green-500{% elif project.status == 'at_risk' %}border-orange-500{% else %}border-red-500{% endif %} bg-gray-50 p-4 rounded hover:bg-gray-100 transition">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <h3 class="font-semibold text-gray-900">{{ project.name }}</h3>
+                        <p class="text-sm text-gray-600">{{ project.code }}</p>
+                    </div>
+                    <span class="px-3 py-1 text-xs rounded-full {% if project.status == 'on_track' %}bg-green-100 text-green-800{% elif project.status == 'at_risk' %}bg-orange-100 text-orange-800{% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ project.get_status_display }}
+                    </span>
+                </div>
+                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                    <span><i class="fas fa-percent mr-1"></i>{{ project.completion_percentage }}%</span>
+                    <span><i class="fas fa-chart-line mr-1"></i>SPI: {{ project.spi }}</span>
+                    <span><i class="fas fa-user mr-1"></i>{{ project.project_manager }}</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No projects assigned yet</p>
+        {% endif %}
+    </div>
+    
+    <!-- My Tasks -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-900">
+                <i class="fas fa-tasks mr-2 text-blue-600"></i>My Tasks
+            </h2>
+            <a href="{% url 'tasks_list' %}" class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
+                View All <i class="fas fa-arrow-right ml-1"></i>
+            </a>
+        </div>
+        
+        {% if tasks %}
+        <div class="space-y-2">
+            {% for task in tasks %}
+            <div class="border-l-4 {% if task.status == 'completed' %}border-green-500{% elif task.status == 'in_progress' %}border-blue-500{% elif task.status == 'blocked' %}border-red-500{% else %}border-gray-300{% endif %} bg-gray-50 p-3 rounded">
+                <h4 class="font-medium text-sm text-gray-900">{{ task.name }}</h4>
+                <div class="flex justify-between items-center mt-2 text-xs text-gray-600">
+                    <span><i class="fas fa-calendar mr-1"></i>{{ task.due_date }}</span>
+                    <span class="px-2 py-1 rounded {% if task.status == 'completed' %}bg-green-100 text-green-800{% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800{% elif task.status == 'blocked' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ task.get_status_display }}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No tasks assigned</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Activities -->
+<div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        <i class="fas fa-history mr-2 text-green-600"></i>Recent Activity
+    </h2>
+    
+    {% if activities %}
+    <div class="space-y-3">
+        {% for activity in activities %}
+        <div class="flex items-start space-x-3 pb-3 border-b last:border-0">
+            <div class="flex-shrink-0">
+                <i class="fas {% if activity.action == 'login' %}fa-sign-in-alt text-blue-500{% elif activity.action == 'create' %}fa-plus text-green-500{% elif activity.action == 'update' %}fa-edit text-orange-500{% elif activity.action == 'delete' %}fa-trash text-red-500{% else %}fa-eye text-gray-500{% endif %} mt-1"></i>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm text-gray-900">
+                    <span class="font-semibold">{{ activity.get_action_display }}</span>
+                    {% if activity.model_name %}
+                    <span class="text-gray-600">{{ activity.model_name }}</span>
+                    {% endif %}
+                </p>
+                {% if activity.description %}
+                <p class="text-xs text-gray-600">{{ activity.description }}</p>
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">
+                    <i class="fas fa-clock mr-1"></i>{{ activity.timestamp|timesince }} ago
+                </p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-500 text-center py-4">No recent activity</p>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+{% if user.profile.is_pmo_director %}
+<div class="mt-6 bg-purple-50 rounded-lg p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+        <i class="fas fa-rocket mr-2 text-purple-600"></i>Quick Actions
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="/admin/" class="flex items-center px-4 py-3 bg-white rounded-lg hover:shadow-md transition">
+            <i class="fas fa-cog text-2xl text-purple-600 mr-3"></i>
+            <span class="font-medium text-gray-900">Admin Panel</span>
+        </a>
+        <a href="/api/docs/" target="_blank" class="flex items-center px-4 py-3 bg-white rounded-lg hover:shadow-md transition">
+            <i class="fas fa-robot text-2xl text-blue-600 mr-3"></i>
+            <span class="font-medium text-gray-900">AI Assistant</span>
+        </a>
+        <a href="/api/docs/" target="_blank" class="flex items-center px-4 py-3 bg-white rounded-lg hover:shadow-md transition">
+            <i class="fas fa-book text-2xl text-green-600 mr-3"></i>
+            <span class="font-medium text-gray-900">API Docs</span>
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+Django==5.0.0
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+anthropic==0.18.1
+celery==5.3.4
+redis==5.0.1
+pandas==2.1.4
+numpy==1.26.2
+whitenoise==6.6.0
+gunicorn==21.2.0
+drf-spectacular==0.27.0
+django-filter==23.5

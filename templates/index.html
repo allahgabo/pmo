@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PMO AI Assistant - Enterprise Project Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .status-on-track { background-color: #10b981; }
+        .status-at-risk { background-color: #f59e0b; }
+        .status-delayed { background-color: #ef4444; }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .loading {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-chart-line text-white text-2xl mr-3"></i>
+                    <span class="text-white text-xl font-bold">PMO AI Assistant</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="showSection('dashboard')" class="text-white hover:text-gray-200 px-3 py-2 rounded-md">
+                        <i class="fas fa-home mr-2"></i>Dashboard
+                    </button>
+                    <button onclick="showSection('projects')" class="text-white hover:text-gray-200 px-3 py-2 rounded-md">
+                        <i class="fas fa-folder mr-2"></i>Projects
+                    </button>
+                    <button onclick="showSection('ai-assistant')" class="text-white hover:text-gray-200 px-3 py-2 rounded-md">
+                        <i class="fas fa-robot mr-2"></i>AI Assistant
+                    </button>
+                    <a href="/api/docs/" class="text-white hover:text-gray-200 px-3 py-2 rounded-md">
+                        <i class="fas fa-book mr-2"></i>API Docs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">Portfolio Dashboard</h1>
+                <p class="text-gray-600 mt-2">Real-time overview of all projects and key metrics</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div id="stats-cards" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="loading mx-auto"></div>
+            </div>
+
+            <!-- Charts and Projects -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Status Distribution -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Project Status Distribution</h3>
+                    <canvas id="statusChart"></canvas>
+                </div>
+
+                <!-- Performance Metrics -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold mb-4">Performance Indicators</h3>
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- At Risk Projects -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-exclamation-triangle text-orange-500 mr-2"></i>
+                    Projects Requiring Attention
+                </h3>
+                <div id="at-risk-projects">
+                    <div class="loading mx-auto"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Section -->
+        <div id="projects-section" class="section hidden">
+            <div class="mb-8 flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">All Projects</h1>
+                    <p class="text-gray-600 mt-2">Manage and monitor your project portfolio</p>
+                </div>
+                <button onclick="showAddProject()" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                    <i class="fas fa-plus mr-2"></i>New Project
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <select id="filter-status" class="border rounded-lg px-4 py-2" onchange="filterProjects()">
+                        <option value="">All Status</option>
+                        <option value="on_track">On Track</option>
+                        <option value="at_risk">At Risk</option>
+                        <option value="delayed">Delayed</option>
+                    </select>
+                    <select id="filter-priority" class="border rounded-lg px-4 py-2" onchange="filterProjects()">
+                        <option value="">All Priority</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                    <input type="text" id="search-projects" placeholder="Search projects..." 
+                           class="border rounded-lg px-4 py-2" onkeyup="filterProjects()">
+                    <button onclick="resetFilters()" class="border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50">
+                        Reset Filters
+                    </button>
+                </div>
+            </div>
+
+            <!-- Projects Grid -->
+            <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="loading mx-auto"></div>
+            </div>
+        </div>
+
+        <!-- AI Assistant Section -->
+        <div id="ai-assistant-section" class="section hidden">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">AI-Powered PMO Assistant</h1>
+                <p class="text-gray-600 mt-2">Get intelligent insights and analysis powered by Claude AI</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- AI Actions -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+                        <div class="space-y-3">
+                            <button onclick="getPortfolioSummary()" 
+                                    class="w-full text-left px-4 py-3 border rounded-lg hover:bg-purple-50 hover:border-purple-500">
+                                <i class="fas fa-chart-pie text-purple-600 mr-2"></i>
+                                Portfolio Summary
+                            </button>
+                            <button onclick="getExecutiveReport()" 
+                                    class="w-full text-left px-4 py-3 border rounded-lg hover:bg-purple-50 hover:border-purple-500">
+                                <i class="fas fa-file-alt text-purple-600 mr-2"></i>
+                                Executive Report
+                            </button>
+                            <button onclick="getRiskAnalysis()" 
+                                    class="w-full text-left px-4 py-3 border rounded-lg hover:bg-purple-50 hover:border-purple-500">
+                                <i class="fas fa-shield-alt text-purple-600 mr-2"></i>
+                                Risk Analysis
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">Ask a Question</h3>
+                        <textarea id="ai-question" rows="4" 
+                                  class="w-full border rounded-lg p-3 mb-3" 
+                                  placeholder="Ask me anything about your projects..."></textarea>
+                        <button onclick="askAI()" 
+                                class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                            <i class="fas fa-paper-plane mr-2"></i>Ask AI
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Response -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h3 class="text-lg font-semibold mb-4">AI Response</h3>
+                        <div id="ai-response" class="prose max-w-none">
+                            <p class="text-gray-500">Select an action or ask a question to get AI-powered insights...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Detail Modal -->
+    <div id="project-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold" id="modal-project-name"></h3>
+                <button onclick="closeModal()" class="text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

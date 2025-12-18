@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PMO AI Assistant{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+        .sidebar {
+            transition: transform 0.3s;
+        }
+        @media (max-width: 768px) {
+            .sidebar.closed {
+                transform: translateX(-100%);
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <!-- Top Navigation -->
+    <nav class="gradient-bg shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button onclick="toggleSidebar()" class="md:hidden text-white mr-4">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                    <i class="fas fa-chart-line text-white text-2xl mr-3"></i>
+                    <span class="text-white text-xl font-bold">PMO AI Assistant</span>
+                </div>
+                
+                {% if user.is_authenticated %}
+                <div class="flex items-center space-x-4">
+                    <span class="text-white text-sm hidden md:block">
+                        <i class="fas fa-user-circle mr-1"></i>
+                        {{ user.get_full_name|default:user.username }}
+                    </span>
+                    <span class="text-white text-xs bg-white bg-opacity-20 px-3 py-1 rounded-full hidden md:block">
+                        {{ user.profile.get_role_display }}
+                    </span>
+                    <a href="{% url 'profile' %}" class="text-white hover:text-gray-200">
+                        <i class="fas fa-user-cog"></i>
+                    </a>
+                    <a href="{% url 'logout' %}" class="text-white hover:text-gray-200">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        {% if user.is_authenticated %}
+        <aside id="sidebar" class="sidebar bg-white w-64 shadow-lg fixed md:static h-screen overflow-y-auto z-40">
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="{% url 'dashboard' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                            <i class="fas fa-home w-6"></i>
+                            <span class="ml-3">Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'projects_list' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                            <i class="fas fa-folder w-6"></i>
+                            <span class="ml-3">Projects</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'tasks_list' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                            <i class="fas fa-tasks w-6"></i>
+                            <span class="ml-3">My Tasks</span>
+                        </a>
+                    </li>
+                    
+                    {% if user.profile.is_pmo_director %}
+                    <li class="pt-4 pb-2">
+                        <p class="text-xs text-gray-500 uppercase px-4">PMO Functions</p>
+                    </li>
+                    <li>
+                        <a href="/api/docs/" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                            <i class="fas fa-robot w-6"></i>
+                            <span class="ml-3">AI Assistant</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/admin/" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                            <i class="fas fa-cog w-6"></i>
+                            <span class="ml-3">Admin Panel</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    <li class="pt-4">
+                        <a href="{% url 'profile' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                            <i class="fas fa-user-circle w-6"></i>
+                            <span class="ml-3">My Profile</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/api/docs/" target="_blank" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                            <i class="fas fa-book w-6"></i>
+                            <span class="ml-3">API Docs</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 overflow-y-auto">
+            <!-- Messages -->
+            {% if messages %}
+            <div class="mb-6">
+                {% for message in messages %}
+                <div class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded relative mb-2" role="alert">
+                    <span class="block sm:inline">{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Content -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('closed');
+        }
+        
+        // Close sidebar on mobile when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const target = event.target;
+            
+            if (window.innerWidth < 768) {
+                if (!sidebar.contains(target) && !target.closest('button[onclick="toggleSidebar()"]')) {
+                    sidebar.classList.add('closed');
+                }
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
