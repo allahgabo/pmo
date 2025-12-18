@@ -9,7 +9,7 @@
         <p class="text-gray-600 mt-2">Manage and monitor your project portfolio</p>
     </div>
     {% if can_edit %}
-    <a href="/admin/projects/project/add/" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
+    <a href="{% url 'project_create' %}" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition">
         <i class="fas fa-plus mr-2"></i>New Project
     </a>
     {% endif %}

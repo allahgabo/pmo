@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Analytics Dashboard - PMO AI Assistant{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Portfolio Analytics</h1>
+        <p class="mt-2 text-gray-600">Comprehensive insights and performance metrics</p>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <i class="fas fa-project-diagram text-blue-600 text-2xl"></i>
+                </div>
+                <span class="text-3xl font-bold text-gray-900">{{ total_projects }}</span>
+            </div>
+            <h3 class="text-sm font-medium text-gray-600">Total Projects</h3>
+            <p class="text-xs text-gray-500 mt-1">{{ active_projects }} active</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <i class="fas fa-chart-line text-green-600 text-2xl"></i>
+                </div>
+                <span class="text-3xl font-bold text-gray-900">{{ avg_completion }}%</span>
+            </div>
+            <h3 class="text-sm font-medium text-gray-600">Avg Completion</h3>
+            <p class="text-xs text-gray-500 mt-1">Portfolio progress</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="bg-purple-100 p-3 rounded-lg">
+                    <i class="fas fa-dollar-sign text-purple-600 text-2xl"></i>
+                </div>
+                <span class="text-3xl font-bold text-gray-900">${{ total_budget|floatformat:0|intcomma }}</span>
+            </div>
+            <h3 class="text-sm font-medium text-gray-600">Total Budget</h3>
+            <p class="text-xs text-gray-500 mt-1">{{ budget_utilization }}% utilized</p>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="bg-orange-100 p-3 rounded-lg">
+                    <i class="fas fa-shield-alt text-orange-600 text-2xl"></i>
+                </div>
+                <span class="text-3xl font-bold text-gray-900">{{ total_risks }}</span>
+            </div>
+            <h3 class="text-sm font-medium text-gray-600">Total Risks</h3>
+            <p class="text-xs text-gray-500 mt-1">Active risks</p>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Project Status Chart -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-chart-pie text-blue-600 mr-2"></i>Project Status Distribution
+            </h2>
+            <div style="position: relative; height: 250px;">
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ status_breakdown.on_track }}</div>
+                    <div class="text-sm text-gray-600">On Track</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-600">{{ status_breakdown.at_risk }}</div>
+                    <div class="text-sm text-gray-600">At Risk</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-red-600">{{ status_breakdown.delayed }}</div>
+                    <div class="text-sm text-gray-600">Delayed</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ status_breakdown.completed }}</div>
+                    <div class="text-sm text-gray-600">Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Severity Chart -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-exclamation-triangle text-orange-600 mr-2"></i>Risk Severity Distribution
+            </h2>
+            <div style="position: relative; height: 250px;">
+                <canvas id="riskChart"></canvas>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-red-600">{{ risk_by_severity.critical }}</div>
+                    <div class="text-sm text-gray-600">Critical</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-600">{{ risk_by_severity.high }}</div>
+                    <div class="text-sm text-gray-600">High</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-yellow-600">{{ risk_by_severity.medium }}</div>
+                    <div class="text-sm text-gray-600">Medium</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ risk_by_severity.low }}</div>
+                    <div class="text-sm text-gray-600">Low</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-tachometer-alt text-blue-600 mr-2"></i>Performance Indices
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm text-gray-600">Avg SPI</span>
+                        <span class="text-sm font-semibold {% if avg_spi >= 0.9 %}text-green-600{% else %}text-red-600{% endif %}">{{ avg_spi }}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="{% if avg_spi >= 0.9 %}bg-green-600{% else %}bg-red-600{% endif %} h-2 rounded-full" style="width: {{ avg_spi|floatformat:2|slice:'2:' }}%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between mb-1">
+                        <span class="text-sm text-gray-600">Avg CPI</span>
+                        <span class="text-sm font-semibold {% if avg_cpi >= 0.9 %}text-green-600{% else %}text-red-600{% endif %}">{{ avg_cpi }}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="{% if avg_cpi >= 0.9 %}bg-green-600{% else %}bg-red-600{% endif %} h-2 rounded-full" style="width: {{ avg_cpi|floatformat:2|slice:'2:' }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-money-bill-wave text-green-600 mr-2"></i>Budget Overview
+            </h3>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Total Budget</span>
+                    <span class="text-sm font-semibold">${{ total_budget|floatformat:0|intcomma }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Total Spent</span>
+                    <span class="text-sm font-semibold">${{ total_spent|floatformat:0|intcomma }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Variance</span>
+                    <span class="text-sm font-semibold {% if budget_variance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                        ${{ budget_variance|floatformat:0|intcomma }}
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div class="bg-purple-600 h-2 rounded-full" style="width: {{ budget_utilization }}%"></div>
+                </div>
+                <p class="text-xs text-gray-500 text-center">{{ budget_utilization }}% Utilized</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-tasks text-blue-600 mr-2"></i>Task Summary
+            </h3>
+            <div class="space-y-3">
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Total Tasks</span>
+                    <span class="text-sm font-semibold">{{ total_tasks }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Completed</span>
+                    <span class="text-sm font-semibold text-green-600">{{ completed_tasks }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Overdue</span>
+                    <span class="text-sm font-semibold text-red-600">{{ overdue_tasks }}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    {% widthratio completed_tasks total_tasks 100 as completion_pct %}
+                    <div class="bg-green-600 h-2 rounded-full" style="width: {{ completion_pct }}%"></div>
+                </div>
+                <p class="text-xs text-gray-500 text-center">{{ completion_pct }}% Complete</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top & Bottom Projects -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Top Performing Projects -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-star text-yellow-500 mr-2"></i>Top Performing Projects
+            </h2>
+            <div class="space-y-3">
+                {% for project in top_projects %}
+                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900">{{ project.name }}</h4>
+                        <p class="text-sm text-gray-600">Health Score: {{ project.health_score }}</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                            {{ project.get_status_display }}
+                        </span>
+                        <span class="text-2xl font-bold text-green-600">{{ project.completion_percentage }}%</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 text-center py-4">No projects found</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Projects Needing Attention -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                <i class="fas fa-exclamation-circle text-red-600 mr-2"></i>Projects Needing Attention
+            </h2>
+            <div class="space-y-3">
+                {% for project in bottom_projects %}
+                <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                    <div class="flex-1">
+                        <h4 class="font-semibold text-gray-900">{{ project.name }}</h4>
+                        <p class="text-sm text-gray-600">Health Score: {{ project.health_score }}</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">
+                            {{ project.get_status_display }}
+                        </span>
+                        <span class="text-2xl font-bold text-red-600">{{ project.completion_percentage }}%</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 text-center py-4">No projects found</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+// Status Chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['On Track', 'At Risk', 'Delayed', 'Completed'],
+        datasets: [{
+            data: [
+                {{ status_breakdown.on_track }},
+                {{ status_breakdown.at_risk }},
+                {{ status_breakdown.delayed }},
+                {{ status_breakdown.completed }}
+            ],
+            backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'],
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            }
+        }
+    }
+});
+
+// Risk Chart
+const riskCtx = document.getElementById('riskChart').getContext('2d');
+new Chart(riskCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        datasets: [{
+            label: 'Risks',
+            data: [
+                {{ risk_by_severity.critical }},
+                {{ risk_by_severity.high }},
+                {{ risk_by_severity.medium }},
+                {{ risk_by_severity.low }}
+            ],
+            backgroundColor: ['#ef4444', '#f59e0b', '#eab308', '#10b981'],
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

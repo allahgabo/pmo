@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ action }} Project - PMO AI Assistant{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <a href="{% url 'projects_list' %}" class="text-purple-600 hover:text-purple-800 text-sm font-semibold">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Projects
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">
+            <i class="fas fa-{% if action == 'Create' %}plus{% else %}edit{% endif %} text-purple-600 mr-3"></i>
+            {{ action }} Project
+        </h1>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Project Information Section -->
+            <div class="border-b pb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Project Information</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Project Name <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Project Code <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.code }}
+                        {% if form.code.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.code.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <p class="text-red-500 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        {{ form.status }}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                        {{ form.priority }}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Team Size</label>
+                        {{ form.team_size }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Section -->
+            <div class="border-b pb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Team</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Project Manager <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.project_manager }}
+                        {% if form.project_manager.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.project_manager.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Executive Sponsor</label>
+                        {{ form.sponsor }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Section -->
+            <div class="border-b pb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Timeline</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Start Date <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.start_date }}
+                        {% if form.start_date.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.start_date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Planned End Date <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.planned_end_date }}
+                        {% if form.planned_end_date.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.planned_end_date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Actual End Date</label>
+                        {{ form.actual_end_date }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Section -->
+            <div class="border-b pb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Budget</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Total Budget ($)</label>
+                        {{ form.budget }}
+                        {% if form.budget.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.budget.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount Spent ($)</label>
+                        {{ form.spent }}
+                        {% if form.spent.errors %}
+                            <p class="text-red-500 text-sm mt-1">{{ form.spent.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics Section -->
+            <div class="pb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Performance Metrics</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Completion (%)</label>
+                        {{ form.completion_percentage }}
+                        <p class="text-xs text-gray-500 mt-1">0-100</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">SPI</label>
+                        {{ form.spi }}
+                        <p class="text-xs text-gray-500 mt-1">Schedule Performance Index</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">CPI</label>
+                        {{ form.cpi }}
+                        <p class="text-xs text-gray-500 mt-1">Cost Performance Index</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between pt-6 border-t">
+                <a href="{% url 'projects_list' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                    Cancel
+                </a>
+                
+                <button type="submit" class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                    <i class="fas fa-save mr-2"></i>{{ action }} Project
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

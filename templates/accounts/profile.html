@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - PMO AI Assistant{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+        <p class="mt-2 text-gray-600">Manage your account settings and view your activity</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Profile Information Card -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900">Profile Information</h2>
+                    <a href="{% url 'admin:auth_user_change' user.id %}" class="text-blue-600 hover:text-blue-700 text-sm">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </a>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- User Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                            <p class="text-gray-900">{{ user.username }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <p class="text-gray-900">{{ user.email|default:"Not set" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <p class="text-gray-900">{{ user.get_full_name|default:user.username }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                                {% if profile.is_admin %}bg-purple-100 text-purple-800
+                                {% elif profile.is_pmo_director %}bg-blue-100 text-blue-800
+                                {% elif profile.is_project_manager %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                <i class="fas fa-user-tag mr-2"></i>
+                                {{ profile.get_role_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if profile.department or profile.phone %}
+                    <hr class="my-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% if profile.department %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                            <p class="text-gray-900">{{ profile.department }}</p>
+                        </div>
+                        {% endif %}
+                        {% if profile.phone %}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <p class="text-gray-900">{{ profile.phone }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if profile.bio %}
+                    <hr class="my-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+                        <p class="text-gray-700">{{ profile.bio }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Account Details -->
+                    <hr class="my-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <label class="block text-gray-600 mb-1">Member Since</label>
+                            <p class="text-gray-900">{{ user.date_joined|date:"F j, Y" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-gray-600 mb-1">Last Login</label>
+                            <p class="text-gray-900">{{ user.last_login|date:"F j, Y g:i A"|default:"Never" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
+                
+                {% if recent_activities %}
+                <div class="space-y-3">
+                    {% for activity in recent_activities %}
+                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <div class="flex-shrink-0 mt-1">
+                            {% if activity.action == 'login' %}
+                                <i class="fas fa-sign-in-alt text-green-600"></i>
+                            {% elif activity.action == 'logout' %}
+                                <i class="fas fa-sign-out-alt text-gray-600"></i>
+                            {% elif activity.action == 'create' %}
+                                <i class="fas fa-plus-circle text-blue-600"></i>
+                            {% elif activity.action == 'update' %}
+                                <i class="fas fa-edit text-yellow-600"></i>
+                            {% elif activity.action == 'delete' %}
+                                <i class="fas fa-trash text-red-600"></i>
+                            {% else %}
+                                <i class="fas fa-eye text-gray-600"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-gray-900">
+                                {{ activity.description }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ activity.timestamp|timesince }} ago
+                                {% if activity.ip_address %}
+                                    • {{ activity.ip_address }}
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-center py-4">No recent activity</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Statistics Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Stats Card -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Statistics</h2>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-project-diagram text-blue-600 text-xl"></i>
+                            <span class="text-sm font-medium text-gray-700">Projects</span>
+                        </div>
+                        <span class="text-2xl font-bold text-blue-600">{{ profile.projects_count }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-tasks text-green-600 text-xl"></i>
+                            <span class="text-sm font-medium text-gray-700">Tasks</span>
+                        </div>
+                        <span class="text-2xl font-bold text-green-600">{{ profile.tasks_count }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <i class="fas fa-history text-purple-600 text-xl"></i>
+                            <span class="text-sm font-medium text-gray-700">Activities</span>
+                        </div>
+                        <span class="text-2xl font-bold text-purple-600">{{ profile.activities_count }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions Card -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
+                
+                <div class="space-y-2">
+                    <a href="{% url 'dashboard' %}" 
+                       class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    
+                    <a href="{% url 'projects_list' %}" 
+                       class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center">
+                        <i class="fas fa-project-diagram mr-2"></i>View Projects
+                    </a>
+                    
+                    <a href="{% url 'tasks_list' %}" 
+                       class="block w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition text-center">
+                        <i class="fas fa-tasks mr-2"></i>My Tasks
+                    </a>
+                    
+                    {% if user.is_staff %}
+                    <a href="{% url 'admin:index' %}" 
+                       class="block w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-center">
+                        <i class="fas fa-cog mr-2"></i>Admin Panel
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'admin:password_change' %}" 
+                       class="block w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-center">
+                        <i class="fas fa-key mr-2"></i>Change Password
+                    </a>
+                </div>
+            </div>
+
+            <!-- Permissions Card -->
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h2 class="text-xl font-semibold text-gray-900 mb-4">Permissions</h2>
+                
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-700">View Projects</span>
+                        <i class="fas fa-check text-green-600"></i>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-700">View Tasks</span>
+                        <i class="fas fa-check text-green-600"></i>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-700">Edit Projects</span>
+                        {% if profile.can_edit_projects %}
+                            <i class="fas fa-check text-green-600"></i>
+                        {% else %}
+                            <i class="fas fa-times text-red-600"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-700">Admin Access</span>
+                        {% if user.is_staff %}
+                            <i class="fas fa-check text-green-600"></i>
+                        {% else %}
+                            <i class="fas fa-times text-red-600"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-700">AI Assistant</span>
+                        {% if profile.is_pmo_director or profile.is_admin %}
+                            <i class="fas fa-check text-green-600"></i>
+                        {% else %}
+                            <i class="fas fa-times text-red-600"></i>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

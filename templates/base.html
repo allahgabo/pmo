@@ -84,6 +84,12 @@
                             <span class="ml-3">My Tasks</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="{% url 'analytics:dashboard' %}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition">
+                            <i class="fas fa-chart-bar w-6"></i>
+                            <span class="ml-3">Analytics</span>
+                        </a>
+                    </li>
                     
                     {% if user.profile.is_pmo_director %}
                     <li class="pt-4 pb-2">

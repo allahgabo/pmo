@@ -231,11 +231,19 @@ def project_detail_view(request, pk):
     # Check permissions
     can_edit = profile.can_edit_projects
     
+    # Calculate task statistics
+    task_stats = {
+        'completed': project.tasks.filter(status='completed').count(),
+        'in_progress': project.tasks.filter(status='in_progress').count(),
+        'not_started': project.tasks.filter(status='not_started').count(),
+    }
+    
     log_activity(user, 'view', 'Project', project.id, f'Viewed project: {project.name}', request)
     
     context = {
         'project': project,
         'can_edit': can_edit,
+        'task_stats': task_stats,
     }
     
     return render(request, 'projects/detail.html', context)
@@ -386,3 +394,103 @@ class ActivityLogAPIView(APIView):
         } for act in activities]
         
         return Response(data)
+
+
+@login_required
+def project_create_view(request):
+    """Create new project"""
+    from projects.forms import ProjectForm
+    
+    user = request.user
+    profile = user.profile
+    
+    # Check permissions
+    if not profile.can_edit_projects:
+        messages.error(request, 'You do not have permission to create projects')
+        return redirect('projects_list')
+    
+    if request.method == 'POST':
+        form = ProjectForm(request.POST)
+        if form.is_valid():
+            project = form.save()
+            log_activity(user, 'create', 'Project', project.id, f'Created project: {project.name}', request)
+            messages.success(request, f'Project "{project.name}" created successfully!')
+            return redirect('project_detail', pk=project.id)
+    else:
+        form = ProjectForm()
+    
+    context = {
+        'form': form,
+        'action': 'Create',
+    }
+    
+    return render(request, 'projects/form.html', context)
+
+
+@login_required
+def project_edit_view(request, pk):
+    """Edit existing project"""
+    from projects.forms import ProjectForm
+    
+    try:
+        project = Project.objects.get(pk=pk)
+    except Project.DoesNotExist:
+        messages.error(request, 'Project not found')
+        return redirect('projects_list')
+    
+    user = request.user
+    profile = user.profile
+    
+    # Check permissions
+    if not profile.can_edit_projects:
+        messages.error(request, 'You do not have permission to edit projects')
+        return redirect('project_detail', pk=pk)
+    
+    if request.method == 'POST':
+        form = ProjectForm(request.POST, instance=project)
+        if form.is_valid():
+            project = form.save()
+            log_activity(user, 'update', 'Project', project.id, f'Updated project: {project.name}', request)
+            messages.success(request, f'Project "{project.name}" updated successfully!')
+            return redirect('project_detail', pk=project.id)
+    else:
+        form = ProjectForm(instance=project)
+    
+    context = {
+        'form': form,
+        'project': project,
+        'action': 'Edit',
+    }
+    
+    return render(request, 'projects/form.html', context)
+
+
+@login_required
+def project_delete_view(request, pk):
+    """Delete project"""
+    try:
+        project = Project.objects.get(pk=pk)
+    except Project.DoesNotExist:
+        messages.error(request, 'Project not found')
+        return redirect('projects_list')
+    
+    user = request.user
+    profile = user.profile
+    
+    # Check permissions
+    if not profile.is_pmo_director:
+        messages.error(request, 'Only PMO Directors can delete projects')
+        return redirect('project_detail', pk=pk)
+    
+    if request.method == 'POST':
+        project_name = project.name
+        log_activity(user, 'delete', 'Project', project.id, f'Deleted project: {project_name}', request)
+        project.delete()
+        messages.success(request, f'Project "{project_name}" deleted successfully!')
+        return redirect('projects_list')
+    
+    context = {
+        'project': project,
+    }
+    
+    return render(request, 'projects/delete_confirm.html', context)

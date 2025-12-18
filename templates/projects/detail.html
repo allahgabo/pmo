@@ -19,9 +19,15 @@
             {{ project.get_status_display }}
         </span>
         {% if can_edit %}
-        <a href="/admin/projects/project/{{ project.id }}/change/" 
+        <a href="{% url 'project_edit' project.id %}" 
            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition text-sm">
             <i class="fas fa-edit mr-2"></i>Edit
+        </a>
+        {% endif %}
+        {% if user.profile.is_pmo_director %}
+        <a href="{% url 'project_delete' project.id %}" 
+           class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition text-sm">
+            <i class="fas fa-trash mr-2"></i>Delete
         </a>
         {% endif %}
     </div>
@@ -157,11 +163,11 @@
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Completed</span>
-                    <span class="font-semibold text-green-600">{{ project.tasks.filter.status='completed'.count }}</span>
+                    <span class="font-semibold text-green-600">{{ task_stats.completed }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">In Progress</span>
-                    <span class="font-semibold text-blue-600">{{ project.tasks.filter.status='in_progress'.count }}</span>
+                    <span class="font-semibold text-blue-600">{{ task_stats.in_progress }}</span>
                 </div>
             </div>
         </div>

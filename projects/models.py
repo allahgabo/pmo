@@ -36,7 +36,7 @@ class Project(models.Model):
     actual_end_date = models.DateField(null=True, blank=True)
     
     # Budget
-    budget = models.DecimalField(max_digits=15, decimal_places=2, help_text="Total project budget")
+    budget = models.DecimalField(max_digits=15, decimal_places=2, default=0, help_text="Total project budget")
     spent = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     
     # Progress Metrics
@@ -81,6 +81,8 @@ class Project(models.Model):
     
     @property
     def is_overbudget(self):
+        if self.budget is None or self.spent is None:
+            return False
         return self.spent > self.budget
     
     @property
@@ -89,11 +91,15 @@ class Project(models.Model):
     
     @property
     def budget_variance(self):
+        if self.budget is None or self.spent is None:
+            return 0.0
         return float(self.budget - self.spent)
     
     @property
     def days_remaining(self):
         if self.actual_end_date:
+            return 0
+        if self.planned_end_date is None:
             return 0
         delta = self.planned_end_date - timezone.now().date()
         return delta.days
@@ -235,11 +241,15 @@ class Task(models.Model):
     def is_overdue(self):
         if self.status in ['completed', 'cancelled']:
             return False
+        if self.due_date is None:
+            return False
         return self.due_date < timezone.now().date()
     
     @property
     def days_until_due(self):
         if self.status in ['completed', 'cancelled']:
+            return 0
+        if self.due_date is None:
             return 0
         delta = self.due_date - timezone.now().date()
         return delta.days

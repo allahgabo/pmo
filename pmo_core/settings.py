@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',  # For intcomma and other filters
     
     # Third party apps
     'rest_framework',
@@ -136,9 +137,14 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'PMO AI Assistant API',
-    'DESCRIPTION': 'Enterprise-grade PMO AI Assistant for project management',
-    'VERSION': '1.0.0',
+    'DESCRIPTION': 'Enterprise-grade PMO AI Assistant for project management with AI-powered analysis',
+    'VERSION': '2.0.3',
     'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/',
+    'SERVERS': [
+        {'url': 'http://localhost:8000', 'description': 'Development server'},
+    ],
 }
 
 # AI Configuration
