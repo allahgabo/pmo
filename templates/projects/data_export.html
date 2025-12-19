@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Data Export - PMO AI Assistant{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-download text-purple-600 mr-3"></i>Data Export
+            </h1>
+            <p class="text-gray-600">Export your PMO data in CSV format for analysis and reporting</p>
+        </div>
+
+        <!-- Export All -->
+        <div class="bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg shadow-lg p-8 mb-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2">
+                        <i class="fas fa-file-archive mr-2"></i>Export All Data
+                    </h2>
+                    <p class="text-purple-100">Download all 4 CSV files in a single ZIP archive</p>
+                    <ul class="mt-4 space-y-1 text-sm">
+                        <li>✅ projects.csv - Portfolio data</li>
+                        <li>✅ tasks.csv - Task execution data</li>
+                        <li>✅ risks.csv - Risk register</li>
+                        <li>✅ resources.csv - Resource allocation</li>
+                    </ul>
+                </div>
+                <div>
+                    <a href="{% url 'export_all_csv' %}" 
+                       class="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition shadow-lg inline-block">
+                        <i class="fas fa-download mr-2"></i>Download All (ZIP)
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Individual Exports -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Projects CSV -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-start mb-4">
+                    <div class="bg-purple-100 p-3 rounded-lg">
+                        <i class="fas fa-project-diagram text-purple-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-lg font-bold text-gray-900">Projects</h3>
+                        <p class="text-sm text-gray-600">Portfolio-level information</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded p-3 mb-4 text-xs font-mono">
+                    <div class="text-gray-700 font-semibold mb-1">Columns:</div>
+                    <div class="text-gray-600 space-y-0.5">
+                        <div>• project_id</div>
+                        <div>• project_name</div>
+                        <div>• start_date</div>
+                        <div>• end_date</div>
+                        <div>• budget</div>
+                        <div>• status</div>
+                    </div>
+                </div>
+                
+                <div class="text-xs text-gray-600 mb-4">
+                    <strong>Used for:</strong><br>
+                    Portfolio health, Executive summaries, AI status explanations
+                </div>
+                
+                <a href="{% url 'export_projects_csv' %}" 
+                   class="block text-center bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition">
+                    <i class="fas fa-download mr-2"></i>Export Projects CSV
+                </a>
+            </div>
+
+            <!-- Tasks CSV -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-start mb-4">
+                    <div class="bg-blue-100 p-3 rounded-lg">
+                        <i class="fas fa-tasks text-blue-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-lg font-bold text-gray-900">Tasks</h3>
+                        <p class="text-sm text-gray-600">Execution-level data</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded p-3 mb-4 text-xs font-mono">
+                    <div class="text-gray-700 font-semibold mb-1">Columns:</div>
+                    <div class="text-gray-600 space-y-0.5">
+                        <div>• task_id</div>
+                        <div>• project_id</div>
+                        <div>• task_name</div>
+                        <div>• planned_days</div>
+                        <div>• actual_days</div>
+                        <div>• progress_pct</div>
+                    </div>
+                </div>
+                
+                <div class="text-xs text-gray-600 mb-4">
+                    <strong>Used for:</strong><br>
+                    Schedule variance, Delay detection, Risk scoring
+                </div>
+                
+                <a href="{% url 'export_tasks_csv' %}" 
+                   class="block text-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                    <i class="fas fa-download mr-2"></i>Export Tasks CSV
+                </a>
+            </div>
+
+            <!-- Risks CSV -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-start mb-4">
+                    <div class="bg-orange-100 p-3 rounded-lg">
+                        <i class="fas fa-exclamation-triangle text-orange-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-lg font-bold text-gray-900">Risks</h3>
+                        <p class="text-sm text-gray-600">PMO risk register</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded p-3 mb-4 text-xs font-mono">
+                    <div class="text-gray-700 font-semibold mb-1">Columns:</div>
+                    <div class="text-gray-600 space-y-0.5">
+                        <div>• risk_id</div>
+                        <div>• project_id</div>
+                        <div>• risk_type</div>
+                        <div>• risk_level</div>
+                        <div>• description</div>
+                    </div>
+                </div>
+                
+                <div class="text-xs text-gray-600 mb-4">
+                    <strong>Used for:</strong><br>
+                    AI risk explanation, Executive risk summaries
+                </div>
+                
+                <a href="{% url 'export_risks_csv' %}" 
+                   class="block text-center bg-orange-600 text-white px-4 py-2 rounded hover:bg-orange-700 transition">
+                    <i class="fas fa-download mr-2"></i>Export Risks CSV
+                </a>
+            </div>
+
+            <!-- Resources CSV -->
+            <div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+                <div class="flex items-start mb-4">
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <i class="fas fa-users text-green-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4 flex-1">
+                        <h3 class="text-lg font-bold text-gray-900">Resources</h3>
+                        <p class="text-sm text-gray-600">Resource management</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 rounded p-3 mb-4 text-xs font-mono">
+                    <div class="text-gray-700 font-semibold mb-1">Columns:</div>
+                    <div class="text-gray-600 space-y-0.5">
+                        <div>• resource_id</div>
+                        <div>• name</div>
+                        <div>• role</div>
+                        <div>• utilization_pct</div>
+                    </div>
+                </div>
+                
+                <div class="text-xs text-gray-600 mb-4">
+                    <strong>Used for:</strong><br>
+                    Over-allocation detection, Capacity planning, AI recommendations
+                </div>
+                
+                <a href="{% url 'export_resources_csv' %}" 
+                   class="block text-center bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition">
+                    <i class="fas fa-download mr-2"></i>Export Resources CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- Usage Guide -->
+        <div class="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+            <h3 class="text-lg font-bold text-blue-900 mb-3">
+                <i class="fas fa-info-circle mr-2"></i>Usage Guide
+            </h3>
+            <div class="text-sm text-blue-800 space-y-2">
+                <p><strong>For AI Analysis:</strong> Export all data and upload to AI tools for portfolio insights</p>
+                <p><strong>For Excel/PowerBI:</strong> Import CSV files for custom dashboards and reports</p>
+                <p><strong>For Backup:</strong> Regular exports provide data snapshots for recovery</p>
+                <p><strong>For Integration:</strong> Use CSV files to integrate with other PMO tools</p>
+            </div>
+        </div>
+
+        <!-- Import Link -->
+        <div class="mt-6 text-center">
+            <a href="{% url 'import_csv_page' %}" class="text-purple-600 hover:text-purple-700 font-semibold">
+                <i class="fas fa-upload mr-2"></i>Import CSV Data
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -494,3 +494,8 @@ def project_delete_view(request, pk):
     }
     
     return render(request, 'projects/delete_confirm.html', context)
+
+
+def landing_view(request):
+    """Landing page - main homepage for all visitors"""
+    return render(request, 'landing.html')
