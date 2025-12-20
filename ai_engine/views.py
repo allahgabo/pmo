@@ -120,6 +120,19 @@ class PMOQuestionView(APIView):
             )
         
         # Gather context data
+        projects = Project.objects.all()[:5]
+        recent_projects = []
+        for p in projects:
+            recent_projects.append({
+                'name': p.name,
+                'code': p.code,
+                'status': p.status,
+                'spi': float(p.spi),
+                'cpi': float(p.cpi),
+                'completion_percentage': p.completion_percentage,
+                'health_score': p.health_score,
+            })
+        
         context_data = {
             'portfolio': {
                 'total_projects': Project.objects.count(),
@@ -127,18 +140,201 @@ class PMOQuestionView(APIView):
                 'at_risk': Project.objects.filter(status='at_risk').count(),
                 'delayed': Project.objects.filter(status='delayed').count(),
             },
-            'recent_projects': list(
-                Project.objects.all()[:5].values(
-                    'name', 'code', 'status', 'spi', 'completion_percentage'
-                )
-            )
+            'recent_projects': recent_projects
         }
         
         # Get AI answer
         ai_engine = PMOAIEngine()
-        answer = ai_engine.answer_pmo_question(question, context_data)
+        ai_response = ai_engine.answer_pmo_question(question, context_data)
         
-        return Response(answer)
+        # Format response for frontend
+        # AI might return structured JSON or a simple response
+        if isinstance(ai_response, dict):
+            if 'response' in ai_response:
+                # Simple response format - convert newlines to HTML
+                raw_text = ai_response['response']
+                
+                # Check if raw_text itself is a JSON string
+                import json
+                try:
+                    parsed = json.loads(raw_text)
+                    if isinstance(parsed, dict) and 'response' in parsed:
+                        raw_text = parsed['response']
+                except (json.JSONDecodeError, TypeError):
+                    pass
+                
+                # Strip JSON wrapper if present
+                import re
+                raw_text = re.sub(r'^```json\s*\n?', '', raw_text, flags=re.IGNORECASE)
+                raw_text = re.sub(r'\n?```\s*$', '', raw_text)
+                raw_text = re.sub(r'^\{\s*"response":\s*"', '', raw_text)
+                raw_text = re.sub(r'"\s*\}\s*$', '', raw_text)
+                
+                # Now convert newlines to <br>
+                answer_text = raw_text.replace('\\n', '<br>').replace('\n', '<br>')
+            elif 'answer' in ai_response:
+                # Already has answer key - convert newlines to HTML
+                answer_text = ai_response['answer'].replace('\\n', '<br>').replace('\n', '<br>')
+            else:
+                # Convert structured response to HTML
+                answer_text = self._format_ai_response(ai_response)
+        else:
+            raw_text = str(ai_response)
+            # Strip JSON wrapper if present
+            import re
+            raw_text = re.sub(r'^```json\s*\n?', '', raw_text, flags=re.IGNORECASE)
+            raw_text = re.sub(r'\n?```\s*$', '', raw_text)
+            answer_text = raw_text.replace('\\n', '<br>').replace('\n', '<br>')
+        
+        return Response({
+            'answer': answer_text,
+            'full_response': ai_response,
+            'is_html': True  # Flag to tell frontend this is HTML
+        })
+    
+    def _format_ai_response(self, ai_response):
+        """Format structured AI response into HTML with proper line breaks"""
+        import json
+        parts = []
+        
+        # Handle new JSON structure with summary, critical_risks, etc.
+        if 'summary' in ai_response:
+            parts.append(f"<strong>Summary:</strong><br>")
+            parts.append(f"{ai_response['summary']}<br><br>")
+        
+        if 'critical_risks' in ai_response and ai_response['critical_risks']:
+            parts.append(f"<strong>Critical Risks:</strong><br>")
+            for risk in ai_response['critical_risks']:
+                parts.append(f"• {risk}<br>")
+            parts.append("<br>")
+        
+        if 'risk_indicators' in ai_response and ai_response['risk_indicators']:
+            parts.append(f"<strong>Risk Indicators:</strong><br>")
+            for indicator in ai_response['risk_indicators']:
+                parts.append(f"• {indicator}<br>")
+            parts.append("<br>")
+        
+        if 'risk_categories' in ai_response and ai_response['risk_categories']:
+            categories = ai_response['risk_categories']
+            
+            if 'high_risk' in categories and categories['high_risk']:
+                parts.append(f"<strong>High Risk Projects:</strong><br>")
+                for item in categories['high_risk']:
+                    parts.append(f"<strong>{item.get('project', 'Unknown')}</strong><br>")
+                    if 'risks' in item:
+                        for risk in item['risks']:
+                            parts.append(f"&nbsp;&nbsp;&nbsp;• {risk}<br>")
+                parts.append("<br>")
+            
+            if 'medium_risk' in categories and categories['medium_risk']:
+                parts.append(f"<strong>Medium Risk Projects:</strong><br>")
+                for item in categories['medium_risk']:
+                    parts.append(f"<strong>{item.get('project', 'Unknown')}</strong><br>")
+                    if 'risks' in item:
+                        for risk in item['risks']:
+                            parts.append(f"&nbsp;&nbsp;&nbsp;• {risk}<br>")
+                parts.append("<br>")
+        
+        if 'immediate_actions' in ai_response and ai_response['immediate_actions']:
+            parts.append(f"<strong>Immediate Actions Required:</strong><br>")
+            for i, action in enumerate(ai_response['immediate_actions'], 1):
+                parts.append(f"{i}. {action}<br>")
+            parts.append("<br>")
+        
+        if 'monitoring_focus' in ai_response and ai_response['monitoring_focus']:
+            parts.append(f"<strong>Monitoring Focus:</strong><br>")
+            for focus in ai_response['monitoring_focus']:
+                parts.append(f"• {focus}<br>")
+            parts.append("<br>")
+        
+        # Handle risk_assessment structure
+        if 'risk_assessment' in ai_response:
+            risk = ai_response['risk_assessment']
+            
+            if 'portfolio_risk_level' in risk:
+                parts.append(f"<strong>Portfolio Risk Level: {risk['portfolio_risk_level']}</strong><br><br>")
+            
+            if 'critical_findings' in risk and risk['critical_findings']:
+                parts.append("<strong>Critical Findings:</strong><br>")
+                for finding in risk['critical_findings']:
+                    parts.append(f"• {finding}<br>")
+                parts.append("<br>")
+        
+        # Handle identified_risks
+        if 'identified_risks' in ai_response and ai_response['identified_risks']:
+            parts.append("<strong>Projects Requiring Immediate Attention:</strong><br><br>")
+            
+            for i, risk in enumerate(ai_response['identified_risks'], 1):
+                parts.append(f"<strong>{i}. {risk.get('project', 'Unknown Project')} - {risk.get('risk_level', 'Unknown')} Risk</strong><br>")
+                
+                if 'key_risks' in risk and risk['key_risks']:
+                    for key_risk in risk['key_risks']:
+                        parts.append(f"&nbsp;&nbsp;&nbsp;• {key_risk}<br>")
+                
+                if 'impact' in risk:
+                    parts.append(f"&nbsp;&nbsp;&nbsp;Impact: {risk['impact']}<br>")
+                
+                parts.append("<br>")
+        
+        # Handle portfolio_risk_indicators
+        if 'portfolio_risk_indicators' in ai_response and ai_response['portfolio_risk_indicators']:
+            parts.append("<strong>Portfolio Risk Indicators:</strong><br><br>")
+            
+            for indicator in ai_response['portfolio_risk_indicators']:
+                parts.append(f"• <strong>{indicator.get('indicator', 'Indicator')}:</strong> {indicator.get('status', 'Unknown')}<br>")
+                if 'details' in indicator:
+                    parts.append(f"&nbsp;&nbsp;{indicator['details']}<br>")
+            parts.append("<br>")
+        
+        # Handle recommended_risk_controls
+        if 'recommended_risk_controls' in ai_response and ai_response['recommended_risk_controls']:
+            parts.append("<strong>Recommended Risk Controls:</strong><br><br>")
+            for i, control in enumerate(ai_response['recommended_risk_controls'], 1):
+                parts.append(f"{i}. {control}<br>")
+            parts.append("<br>")
+        
+        # Handle health_summary (legacy format)
+        if 'health_summary' in ai_response and not parts:
+            summary = ai_response['health_summary']
+            if isinstance(summary, dict):
+                if 'status' in summary:
+                    parts.append(f"<strong>Status: {summary.get('status')}</strong><br>")
+                if 'overall_assessment' in summary:
+                    parts.append(f"{summary.get('overall_assessment')}<br><br>")
+        
+        # Handle insights (legacy format)
+        if 'insights' in ai_response and ai_response['insights'] and not any('Insights' in p for p in parts):
+            parts.append("<strong>Key Insights:</strong><br>")
+            for insight in ai_response['insights']:
+                parts.append(f"• {insight}<br>")
+            parts.append("<br>")
+        
+        # Handle recommendations (legacy format)
+        if 'recommendations' in ai_response and ai_response['recommendations'] and not any('Recommendations' in p for p in parts):
+            parts.append("<strong>Recommendations:</strong><br>")
+            for i, rec in enumerate(ai_response['recommendations'], 1):
+                parts.append(f"{i}. {rec}<br>")
+            parts.append("<br>")
+        
+        # Handle key_metrics
+        if 'key_metrics' in ai_response and ai_response['key_metrics']:
+            parts.append("<strong>Key Metrics:</strong><br>")
+            metrics = ai_response['key_metrics']
+            if isinstance(metrics, dict):
+                for key, value in metrics.items():
+                    parts.append(f"• {key}: {value}<br>")
+            parts.append("<br>")
+        
+        # If we have content, return it
+        if parts:
+            return "".join(parts)
+        
+        # Fallback: Format the text with line breaks
+        if isinstance(ai_response, str):
+            return ai_response.replace('\n', '<br>')
+        
+        # Last resort: Pretty print JSON
+        return "<pre>" + json.dumps(ai_response, indent=2) + "</pre>"
 
 
 class ProjectComparisonView(APIView):

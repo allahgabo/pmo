@@ -1,6 +1,18 @@
 import json
 from typing import Dict, List, Any, Optional
+from decimal import Decimal
 from django.conf import settings
+
+
+def convert_decimals(obj):
+    """Convert Decimal objects to float for JSON serialization"""
+    if isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, dict):
+        return {key: convert_decimals(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_decimals(item) for item in obj]
+    return obj
 
 
 class PMOAIEngine:
@@ -23,12 +35,33 @@ GENERAL RULES:
 - Always explain WHY, not just WHAT
 - Prioritize impact and recommended actions
 
-OUTPUT RULES:
-- Always return VALID JSON
-- Do not include any text outside JSON
-- Use null if a value is unavailable
-- Use arrays for lists
-- Use short, clear sentences
+OUTPUT FORMATTING:
+- Use simple bullet points (•) for lists
+- Use numbered lists (1. 2. 3.) for sequential actions
+- Use clear section headers (no emojis, no markdown bold)
+- Keep paragraphs short (2-3 sentences max)
+- Use proper spacing between sections
+- Start with most important information first
+
+RESPONSE STRUCTURE:
+For any analysis, organize as:
+1. Summary statement (1-2 lines)
+2. Key findings (bullet points)
+3. Details by category (if needed)
+4. Recommendations (numbered list)
+
+Example format:
+"Portfolio Risk Level: Medium-High
+
+Critical Findings:
+• Finding 1
+• Finding 2
+• Finding 3
+
+Immediate Actions Required:
+1. Action item 1
+2. Action item 2
+3. Action item 3"
 
 YOU CAN:
 - Summarize project status
@@ -37,11 +70,14 @@ YOU CAN:
 - Answer PMO questions
 - Compare projects
 - Provide recommendations
+- Identify trends and patterns
 
 YOU CANNOT:
 - Invent metrics
 - Change KPI definitions
-- Access external systems"""
+- Access external systems
+- Make decisions for users
+- Guarantee outcomes"""
 
     def __init__(self):
         self.api_key = settings.ANTHROPIC_API_KEY
@@ -58,7 +94,20 @@ YOU CANNOT:
         
         try:
             from anthropic import Anthropic
-            client = Anthropic(api_key=self.api_key)
+            
+            # Initialize client - handle different versions
+            try:
+                client = Anthropic(api_key=self.api_key)
+            except TypeError as e:
+                # Older version might not support certain parameters
+                print(f"[AI] Anthropic client init warning: {e}")
+                # Try alternative initialization
+                try:
+                    import anthropic
+                    client = anthropic.Anthropic(api_key=self.api_key)
+                except:
+                    # Fallback for very old versions
+                    client = Anthropic(api_key=self.api_key)
             
             message = client.messages.create(
                 model=self.model,
@@ -75,17 +124,21 @@ YOU CANNOT:
             try:
                 return json.loads(response_text)
             except json.JSONDecodeError:
-                # If not JSON, wrap it
+                # If not JSON, wrap it as a simple response
                 return {
                     "response": response_text,
                     "raw_response": True
                 }
         
         except Exception as e:
+            print(f"[AI Error] {type(e).__name__}: {str(e)}")
+            # Return structured error response
             return {
-                "error": str(e),
-                "demo_mode": True,
-                "message": "Error calling AI API, returning demo response"
+                "error": True,
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "response": f"I encountered an error while processing your request. Please try again or rephrase your question.",
+                "demo_fallback": self._get_demo_response(user_message)
             }
     
     def _get_demo_response(self, user_message: str) -> Dict[str, Any]:
@@ -215,6 +268,9 @@ Return a JSON response."""
         """
         Answer a specific PMO question using provided context
         """
+        # Convert any Decimal objects to float
+        context_data = convert_decimals(context_data)
+        
         prompt = f"""Answer the PMO question below using the provided data.
 
 User Question: "{question}"
@@ -230,6 +286,9 @@ Provide a clear, actionable answer. Return a JSON response."""
         """
         Compare multiple projects and identify patterns
         """
+        # Convert any Decimal objects to float
+        projects_data = convert_decimals(projects_data)
+        
         prompt = f"""Compare the following projects and identify patterns, risks, and recommendations:
 
 {json.dumps(projects_data, indent=2)}
@@ -249,6 +308,10 @@ Return a JSON response."""
         """
         Generate comprehensive executive report
         """
+        # Convert any Decimal objects to float
+        portfolio_data = convert_decimals(portfolio_data)
+        projects_data = convert_decimals(projects_data)
+        
         prompt = f"""Generate an executive-level PMO report.
 
 Portfolio Overview:

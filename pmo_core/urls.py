@@ -6,7 +6,7 @@ from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from accounts.views import (
     dashboard_view, projects_list_view, project_detail_view, tasks_list_view,
-    project_create_view, project_edit_view, project_delete_view, landing_view
+    project_create_view, project_edit_view, project_delete_view, landing_view, ai_assistant_view
 )
 from projects.csv_views import (
     export_projects_csv, export_tasks_csv, export_risks_csv, export_resources_csv,
@@ -29,6 +29,9 @@ urlpatterns = [
     path('projects/<int:pk>/edit/', project_edit_view, name='project_edit'),
     path('projects/<int:pk>/delete/', project_delete_view, name='project_delete'),
     path('tasks/', tasks_list_view, name='tasks_list'),
+    
+    # AI Assistant
+    path('ai-assistant/', ai_assistant_view, name='ai_assistant'),
     
     # CSV Export/Import
     path('export/', data_export_page, name='data_export_page'),

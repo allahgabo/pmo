@@ -5,11 +5,14 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
+from django.db import models
+from django.db.models import Count, Q
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from drf_spectacular.utils import extend_schema
 from .models import UserProfile, ActivityLog
 from projects.models import Project, Task
 
@@ -110,6 +113,7 @@ def logout_view(request):
     return redirect('login')
 
 
+@login_required
 @login_required
 def dashboard_view(request):
     """Main dashboard view"""
@@ -308,6 +312,29 @@ class RegisterAPIView(APIView):
     """API endpoint for registration"""
     permission_classes = [AllowAny]
     
+    @extend_schema(
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'username': {'type': 'string'},
+                    'email': {'type': 'string', 'format': 'email'},
+                    'password': {'type': 'string', 'format': 'password'},
+                },
+                'required': ['username', 'email', 'password']
+            }
+        },
+        responses={
+            201: {
+                'type': 'object',
+                'properties': {
+                    'token': {'type': 'string'},
+                    'user_id': {'type': 'integer'},
+                    'username': {'type': 'string'},
+                }
+            }
+        }
+    )
     def post(self, request):
         username = request.data.get('username')
         email = request.data.get('email')
@@ -499,3 +526,36 @@ def project_delete_view(request, pk):
 def landing_view(request):
     """Landing page - main homepage for all visitors"""
     return render(request, 'landing.html')
+
+
+@login_required
+def ai_assistant_view(request):
+    """AI Assistant chat interface"""
+    from django.conf import settings
+    from django.db.models import Avg
+    
+    # Get portfolio stats
+    total_projects = Project.objects.count()
+    total_risks = Project.objects.aggregate(
+        total=models.Count('risks', filter=models.Q(risks__status__in=['open', 'mitigating']))
+    )['total'] or 0
+    
+    pending_tasks = Task.objects.filter(status__in=['not_started', 'in_progress']).count()
+    
+    # Calculate average health score
+    projects = Project.objects.all()
+    if projects:
+        health_scores = [p.health_score for p in projects]
+        avg_health_score = sum(health_scores) / len(health_scores) if health_scores else 0
+    else:
+        avg_health_score = 0
+    
+    context = {
+        'total_projects': total_projects,
+        'total_risks': total_risks,
+        'pending_tasks': pending_tasks,
+        'avg_health_score': round(avg_health_score),
+        'ANTHROPIC_API_KEY': settings.ANTHROPIC_API_KEY,
+    }
+    
+    return render(request, 'ai_assistant.html', context)

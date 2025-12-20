@@ -128,6 +128,61 @@ class Project(models.Model):
         score -= min(overdue_tasks * 5, 20)
         
         return max(0, score)
+    
+    @property
+    def schedule_variance(self):
+        """Schedule Variance: (BCWP - BCWS) or in simplified terms (EV - PV)"""
+        if not self.budget:
+            return 0
+        earned_value = float(self.budget) * (self.completion_percentage / 100)
+        # Planned value based on time elapsed
+        if self.start_date and self.planned_end_date:
+            total_days = (self.planned_end_date - self.start_date).days
+            elapsed_days = (timezone.now().date() - self.start_date).days
+            if total_days > 0:
+                planned_completion = min(100, (elapsed_days / total_days) * 100)
+                planned_value = float(self.budget) * (planned_completion / 100)
+                return earned_value - planned_value
+        return 0
+    
+    @property
+    def cost_variance(self):
+        """Cost Variance: Earned Value - Actual Cost"""
+        if not self.budget:
+            return 0
+        earned_value = float(self.budget) * (self.completion_percentage / 100)
+        actual_cost = float(self.spent)
+        return earned_value - actual_cost
+    
+    @property
+    def budget_burn_rate(self):
+        """Budget burn rate per day"""
+        if not self.start_date or not self.spent:
+            return 0
+        elapsed_days = (timezone.now().date() - self.start_date).days
+        if elapsed_days > 0:
+            return float(self.spent) / elapsed_days
+        return 0
+    
+    @property
+    def projected_completion_date(self):
+        """Projected completion based on current SPI"""
+        if not self.planned_end_date or self.spi == 0:
+            return self.planned_end_date
+        if self.spi >= 1:
+            return self.planned_end_date
+        # If behind schedule, project new date
+        total_days = (self.planned_end_date - self.start_date).days
+        projected_days = total_days / float(self.spi)
+        from datetime import timedelta
+        return self.start_date + timedelta(days=projected_days)
+    
+    @property
+    def projected_final_cost(self):
+        """Estimate at Completion (EAC)"""
+        if not self.budget or self.cpi == 0:
+            return self.budget
+        return float(self.budget) / float(self.cpi)
 
 
 class Risk(models.Model):
@@ -326,3 +381,102 @@ class Milestone(models.Model):
     
     def __str__(self):
         return f"{self.project.code} - {self.name}"
+
+
+class Issue(models.Model):
+    """Issue model for tracking project issues (separate from risks)"""
+    
+    SEVERITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('critical', 'Critical'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('in_progress', 'In Progress'),
+        ('resolved', 'Resolved'),
+        ('closed', 'Closed'),
+    ]
+    
+    CATEGORY_CHOICES = [
+        ('technical', 'Technical'),
+        ('process', 'Process'),
+        ('people', 'People'),
+        ('communication', 'Communication'),
+        ('scope', 'Scope'),
+        ('quality', 'Quality'),
+        ('other', 'Other'),
+    ]
+    
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='issues')
+    
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    severity = models.CharField(max_length=20, choices=SEVERITY_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    
+    reported_by = models.CharField(max_length=255)
+    assigned_to = models.CharField(max_length=255, blank=True)
+    
+    reported_date = models.DateField(default=timezone.now)
+    resolved_date = models.DateField(null=True, blank=True)
+    
+    resolution = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-reported_date']
+    
+    def __str__(self):
+        return f"{self.project.code} - {self.title}"
+    
+    @property
+    def is_resolved(self):
+        return self.status in ['resolved', 'closed']
+    
+    @property
+    def days_open(self):
+        if self.resolved_date:
+            return (self.resolved_date - self.reported_date).days
+        return (timezone.now().date() - self.reported_date).days
+
+
+class ProjectSnapshot(models.Model):
+    """Historical snapshot of project metrics for trend analysis"""
+    
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='snapshots')
+    snapshot_date = models.DateField(default=timezone.now)
+    
+    # Metrics at time of snapshot
+    status = models.CharField(max_length=20)
+    completion_percentage = models.IntegerField()
+    budget = models.DecimalField(max_digits=15, decimal_places=2)
+    spent = models.DecimalField(max_digits=15, decimal_places=2)
+    spi = models.DecimalField(max_digits=5, decimal_places=2)
+    cpi = models.DecimalField(max_digits=5, decimal_places=2)
+    health_score = models.IntegerField()
+    
+    # Counts
+    total_tasks = models.IntegerField(default=0)
+    completed_tasks = models.IntegerField(default=0)
+    total_risks = models.IntegerField(default=0)
+    high_risks = models.IntegerField(default=0)
+    total_issues = models.IntegerField(default=0)
+    open_issues = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-snapshot_date']
+        unique_together = ['project', 'snapshot_date']
+        indexes = [
+            models.Index(fields=['project', 'snapshot_date']),
+        ]
+    
+    def __str__(self):
+        return f"{self.project.code} - {self.snapshot_date}"

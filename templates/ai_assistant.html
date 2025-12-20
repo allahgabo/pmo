@@ -1,0 +1,528 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Assistant - PMO AI Assistant{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-robot text-purple-600 mr-3"></i>AI Assistant
+            </h1>
+            <p class="text-gray-600">
+                Ask questions about your portfolio, get insights, and receive recommendations
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Chat Interface -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+
+                    <!-- Chat Header -->
+                    <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-4 text-white">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="bg-white bg-opacity-20 rounded-full p-2 mr-3">
+                                    <i class="fas fa-robot text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold">Claude AI</h3>
+                                    <p class="text-sm text-purple-100">Powered by Anthropic</p>
+                                </div>
+                            </div>
+                            <button onclick="clearChat()" class="text-white hover:bg-white hover:bg-opacity-20 px-3 py-1 rounded transition" title="Clear chat">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Messages -->
+                    <div id="chat-messages"
+                         class="h-96 overflow-y-auto p-6 bg-gray-50 space-y-4"
+                         aria-live="polite">
+
+                        <!-- Welcome Message -->
+                        <div class="flex items-start space-x-3">
+                            <div class="bg-purple-600 rounded-full p-2 text-white flex-shrink-0">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="bg-white rounded-lg p-4 shadow-sm max-w-md">
+                                <p class="text-gray-800 mb-2">
+                                    Hello! I'm your AI assistant. I can help you with:
+                                </p>
+                                <ul class="text-sm text-gray-700 space-y-1">
+                                    <li>• Portfolio analysis and health assessments</li>
+                                    <li>• Project risk identification</li>
+                                    <li>• Resource allocation recommendations</li>
+                                    <li>• Schedule and budget analysis</li>
+                                    <li>• Answering questions about your projects</li>
+                                </ul>
+                                <p class="mt-3 text-gray-800">What would you like to know?</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="p-4 bg-white border-t">
+                        <div id="chat-form" class="flex space-x-3">
+                            <textarea
+                                id="user-message"
+                                rows="1"
+                                maxlength="2000"
+                                aria-label="Ask AI about portfolio"
+                                placeholder="Ask me anything about your portfolio... (Shift+Enter for new line)"
+                                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-purple-500 resize-none"
+                                required></textarea>
+                            <button type="button"
+                                    id="send-button"
+                                    class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-paper-plane mr-2"></i>Send
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between mt-2">
+                            <p class="text-xs text-gray-500">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                {% if ANTHROPIC_API_KEY == 'demo-mode' %}
+                                <span class="text-orange-600 font-semibold">Demo Mode</span>
+                                – Responses are simulated
+                                {% else %}
+                                Connected to Claude AI
+                                {% endif %}
+                            </p>
+                            <span id="char-count" class="text-xs text-gray-400">0/2000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="space-y-6">
+
+                <!-- Quick Questions -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-gray-900 mb-4">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>Quick Questions
+                    </h3>
+                    <div class="space-y-2">
+                        <button onclick="askQuestion('Give me a portfolio health summary')" class="quick-btn">📊 Portfolio health summary</button>
+                        <button onclick="askQuestion('What are the top risks across all projects?')" class="quick-btn">🚨 Top portfolio risks</button>
+                        <button onclick="askQuestion('Which projects are over budget?')" class="quick-btn">💰 Over-budget projects</button>
+                        <button onclick="askQuestion('Show me projects behind schedule')" class="quick-btn">⏰ Behind schedule</button>
+                        <button onclick="askQuestion('Resource allocation recommendations')" class="quick-btn">👥 Resource recommendations</button>
+                    </div>
+                </div>
+
+                <!-- Conversation Stats -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="font-bold text-gray-900 mb-4">
+                        <i class="fas fa-chart-line text-blue-500 mr-2"></i>Session Stats
+                    </h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Messages:</span>
+                            <span id="message-count" class="font-semibold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Session time:</span>
+                            <span id="session-time" class="font-semibold">0:00</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include DOMPurify for sanitization -->
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+
+<style>
+.quick-btn {
+    width: 100%;
+    text-align: left;
+    padding: 12px 16px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    transition: all 0.2s;
+    font-size: 14px;
+    cursor: pointer;
+    display: block;
+}
+.quick-btn:hover {
+    background: #e5e7eb;
+    border-color: #9ca3af;
+    transform: translateX(2px);
+}
+.quick-btn:active {
+    background: #d1d5db;
+}
+
+.ai-response {
+    line-height: 1.7;
+    color: #1f2937;
+}
+
+.ai-response strong {
+    font-weight: 700;
+    color: #111827;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+.typing-dot {
+    animation: bounce 1.4s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+</style>
+
+<script>
+const chatMessages = document.getElementById('chat-messages');
+const userMessageInput = document.getElementById('user-message');
+const sendButton = document.getElementById('send-button');
+const charCount = document.getElementById('char-count');
+const messageCountEl = document.getElementById('message-count');
+
+let conversationHistory = [];
+let messageCount = 0;
+let sessionStartTime = Date.now();
+let lastRequestTime = 0;
+let isProcessing = false;
+const MIN_REQUEST_INTERVAL = 1000;
+
+window.addEventListener('load', () => {
+    loadChatHistory();
+    startSessionTimer();
+});
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function sanitizeInput(text) {
+    return text.trim().substring(0, 2000);
+}
+
+function formatTime(ms) {
+    const seconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function askQuestion(question) {
+    userMessageInput.value = question;
+    autoResize(userMessageInput);
+    sendMessage();
+}
+
+function scrollToBottom() {
+    const threshold = 100;
+    if (chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < threshold) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+function updateMessageCount() {
+    messageCount++;
+    messageCountEl.textContent = messageCount;
+}
+
+function startSessionTimer() {
+    setInterval(() => {
+        document.getElementById('session-time').textContent = formatTime(Date.now() - sessionStartTime);
+    }, 1000);
+}
+
+function copyToClipboard(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check mr-1"></i>Copied!';
+        setTimeout(() => { btn.innerHTML = originalHtml; }, 2000);
+    }).catch(err => console.error('Failed to copy:', err));
+}
+
+function addMessage(text, isUser, isHtml = false) {
+    const div = document.createElement('div');
+    div.className = 'flex items-start space-x-3 message-item ' + (isUser ? 'justify-end' : '');
+    
+    const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+    if (isUser) {
+        div.innerHTML = `
+            <div class="bg-purple-600 rounded-lg p-4 shadow-sm max-w-md text-white">
+                <div>${escapeHtml(text)}</div>
+                <div class="text-xs text-purple-200 mt-2">${timeStr}</div>
+            </div>
+            <div class="bg-gray-300 rounded-full p-2 text-gray-700 flex-shrink-0">
+                <i class="fas fa-user"></i>
+            </div>
+        `;
+    } else {
+        const messageId = 'msg-' + Date.now();
+        // If isHtml is true, text is already sanitized HTML - use it directly
+        // Otherwise escape it as plain text
+        const renderedContent = isHtml ? text : escapeHtml(text);
+        
+        div.innerHTML = `
+            <div class="bg-purple-600 rounded-full p-2 text-white flex-shrink-0">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow-sm max-w-md">
+                <div class="text-gray-800 ai-response">${renderedContent}</div>
+                <div class="flex items-center justify-between mt-3 pt-2 border-t">
+                    <span class="text-xs text-gray-400">${timeStr}</span>
+                    <button onclick="copyToClipboard(this, document.getElementById('${messageId}').innerText)" 
+                            class="text-xs text-gray-500 hover:text-purple-600 transition">
+                        <i class="fas fa-copy mr-1"></i>Copy
+                    </button>
+                </div>
+                <div id="${messageId}" class="hidden">${escapeHtml(text)}</div>
+            </div>
+        `;
+    }
+
+    chatMessages.appendChild(div);
+    scrollToBottom();
+    saveChatHistory();
+    updateMessageCount();
+}
+
+function addTypingIndicator() {
+    const div = document.createElement('div');
+    div.id = 'typing-indicator';
+    div.className = 'flex items-start space-x-3';
+    div.innerHTML = `
+        <div class="bg-purple-600 rounded-full p-2 text-white flex-shrink-0">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+            <div class="flex space-x-1">
+                <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+                <div class="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(div);
+    scrollToBottom();
+}
+
+function removeTypingIndicator() {
+    document.getElementById('typing-indicator')?.remove();
+}
+
+function setLoadingState(loading) {
+    sendButton.disabled = loading;
+    userMessageInput.disabled = loading;
+    sendButton.innerHTML = loading ? 
+        '<i class="fas fa-spinner fa-spin mr-2"></i>Sending' : 
+        '<i class="fas fa-paper-plane mr-2"></i>Send';
+    if (!loading) userMessageInput.focus();
+}
+
+function saveChatHistory() {
+    try {
+        const messages = Array.from(chatMessages.querySelectorAll('.message-item')).map(msg => ({
+            text: (msg.classList.contains('justify-end') ? 
+                msg.querySelector('.bg-purple-600 > div:first-child') : 
+                msg.querySelector('.ai-response'))?.innerText || '',
+            isUser: msg.classList.contains('justify-end'),
+            timestamp: new Date().toISOString()
+        }));
+        sessionStorage.setItem('chatHistory', JSON.stringify(messages));
+        sessionStorage.setItem('conversationHistory', JSON.stringify(conversationHistory));
+    } catch (error) {
+        console.error('Failed to save chat history:', error);
+    }
+}
+
+function loadChatHistory() {
+    try {
+        const saved = sessionStorage.getItem('chatHistory');
+        const savedConversation = sessionStorage.getItem('conversationHistory');
+        if (savedConversation) conversationHistory = JSON.parse(savedConversation);
+        if (saved) {
+            JSON.parse(saved).slice(1).forEach(msg => 
+                addMessage(msg.text, msg.isUser, false)
+            );
+        }
+    } catch (error) {
+        console.error('Failed to load chat history:', error);
+    }
+}
+
+function clearChat() {
+    if (confirm('Are you sure you want to clear the chat history?')) {
+        const welcomeMsg = chatMessages.querySelector('.flex.items-start');
+        chatMessages.innerHTML = '';
+        if (welcomeMsg) chatMessages.appendChild(welcomeMsg);
+        conversationHistory = [];
+        messageCount = 0;
+        sessionStartTime = Date.now();
+        sessionStorage.removeItem('chatHistory');
+        sessionStorage.removeItem('conversationHistory');
+        messageCountEl.textContent = '0';
+    }
+}
+
+userMessageInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+userMessageInput.addEventListener('input', function() {
+    autoResize(this);
+    charCount.textContent = `${this.value.length}/2000`;
+});
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 150) + 'px';
+}
+
+sendButton.addEventListener('click', sendMessage);
+
+async function sendMessage() {
+    if (isProcessing) {
+        console.log('Already processing a message');
+        return;
+    }
+
+    const message = sanitizeInput(userMessageInput.value);
+    if (!message) return;
+
+    const now = Date.now();
+    if (now - lastRequestTime < MIN_REQUEST_INTERVAL) {
+        addMessage('⚠️ Please wait a moment before sending another message.', false);
+        return;
+    }
+    lastRequestTime = now;
+    isProcessing = true;
+
+    addMessage(message, true);
+    conversationHistory.push({ role: 'user', content: message });
+
+    userMessageInput.value = '';
+    charCount.textContent = '0/2000';
+    autoResize(userMessageInput);
+    
+    setLoadingState(true);
+    addTypingIndicator();
+
+    try {
+        console.log('Sending request:', { question: message });
+        
+        const response = await fetch('/api/ai/ask/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ 
+                question: message,
+                history: conversationHistory.slice(-10)
+            })
+        });
+
+        console.log('Response status:', response.status);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const rawData = await response.text();
+        console.log('Raw response (first 300 chars):', rawData.substring(0, 300));
+        
+        const data = JSON.parse(rawData);
+        console.log('Parsed data keys:', Object.keys(data));
+
+        removeTypingIndicator();
+
+        if (data.error) throw new Error(data.error);
+
+        let assistantMessage = '';
+        let isHtml = false;
+
+        // Backend sends HTML with <br> tags already formatted
+        // Sanitize it and use directly - don't process further
+        if (data.answer) {
+            console.log('Using data.answer');
+            let rawAnswer = data.answer;
+            
+            // Strip markdown code blocks if Claude wrapped the response
+            rawAnswer = rawAnswer.replace(/^```json<br>/i, '').replace(/<br>```$/i, '');
+            rawAnswer = rawAnswer.replace(/^```<br>/i, '').replace(/<br>```$/i, '');
+            
+            assistantMessage = DOMPurify.sanitize(rawAnswer);
+            isHtml = true;
+        } else if (data.response) {
+            console.log('Using data.response');
+            assistantMessage = DOMPurify.sanitize(data.response);
+            isHtml = true;
+        } else if (data.full_response?.response) {
+            console.log('Using data.full_response.response');
+            assistantMessage = DOMPurify.sanitize(data.full_response.response);
+            isHtml = true;
+        } else if (data.message) {
+            console.log('Using data.message');
+            assistantMessage = data.message;
+            isHtml = false;
+        } else {
+            throw new Error('No response content found in: ' + JSON.stringify(Object.keys(data)));
+        }
+
+        console.log('Assistant message (first 200 chars):', assistantMessage.substring(0, 200));
+        console.log('Is HTML?', isHtml);
+        console.log('Has <br>?', assistantMessage.includes('<br>'));
+
+        conversationHistory.push({ role: 'assistant', content: assistantMessage });
+        addMessage(assistantMessage, false, isHtml);
+
+        if (conversationHistory.length > 20) {
+            conversationHistory = conversationHistory.slice(-20);
+        }
+
+    } catch (error) {
+        removeTypingIndicator();
+        
+        let errorMsg = '❌ Sorry, I encountered an error. ';
+        if (error.message.includes('429')) {
+            errorMsg += 'Rate limit reached. Please wait a moment.';
+        } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
+            errorMsg += 'Server temporarily unavailable.';
+        } else if (error.message.includes('Failed to fetch')) {
+            errorMsg += 'Network connection issue.';
+        } else {
+            errorMsg += error.message;
+        }
+        
+        addMessage(errorMsg, false);
+        console.error('Chat error:', error);
+    } finally {
+        setLoadingState(false);
+        isProcessing = false;
+    }
+}
+</script>
+
+{% endblock %}

@@ -4,11 +4,12 @@ Django settings for PMO AI Assistant project.
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-pmo-ai-assistant-secret-key-change-in-production'
-
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-change-in-production')
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
@@ -151,3 +152,12 @@ SPECTACULAR_SETTINGS = {
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', 'demo-mode')
 AI_MODEL = 'claude-sonnet-4-20250514'
 AI_MAX_TOKENS = 4096
+
+# DRF Spectacular (API Schema) Settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'PMO AI Assistant API',
+    'DESCRIPTION': 'Enterprise Project Management Office API with AI integration',
+    'VERSION': '2.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+}

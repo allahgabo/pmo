@@ -1,0 +1,467 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* Color scheme matching PMO app */
+    :root {
+        --primary-color: #9333ea;
+        --primary-dark: #7c3aed;
+        --secondary-color: #3b82f6;
+        --accent-color: #8b5cf6;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --dark-bg: #1f2937;
+        --light-bg: #f9fafb;
+    }
+
+    /* Header styling */
+    #header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 1rem 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    #branding h1 {
+        color: white;
+        font-weight: 700;
+        font-size: 1.75rem;
+        margin: 0;
+        padding: 0.5rem 0;
+    }
+
+    #branding h1 a:link,
+    #branding h1 a:visited {
+        color: white;
+        text-decoration: none;
+    }
+
+    /* User tools */
+    #user-tools {
+        color: white;
+        text-align: right;
+        padding: 0.5rem 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    #user-tools a {
+        color: white;
+        font-weight: 500;
+        margin-left: 1rem;
+        text-decoration: none;
+        transition: opacity 0.2s;
+    }
+
+    #user-tools a:hover {
+        opacity: 0.8;
+    }
+
+    /* Back to site button */
+    .back-to-site {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background 0.2s;
+    }
+
+    .back-to-site:hover {
+        background: rgba(255, 255, 255, 0.3);
+        opacity: 1 !important;
+    }
+
+    /* Breadcrumbs */
+    div.breadcrumbs {
+        background: var(--light-bg);
+        border-bottom: 1px solid #e5e7eb;
+        padding: 0.75rem 2rem;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    div.breadcrumbs a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    div.breadcrumbs a:hover {
+        text-decoration: underline;
+    }
+
+    /* Content area */
+    #content {
+        padding: 2rem;
+        background: #ffffff;
+        min-height: calc(100vh - 200px);
+    }
+
+    /* Module styling */
+    .module {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+    }
+
+    .module h2 {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+        color: white;
+        padding: 0.75rem 1rem;
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+    }
+
+    .module caption {
+        background: var(--light-bg);
+        color: var(--dark-bg);
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        text-align: left;
+    }
+
+    /* Buttons */
+    .button,
+    input[type=submit],
+    input[type=button],
+    .submit-row input,
+    a.button {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .button:hover,
+    input[type=submit]:hover,
+    input[type=button]:hover,
+    .submit-row input:hover,
+    a.button:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .button.default,
+    input[type=submit].default {
+        background: var(--secondary-color);
+    }
+
+    /* Delete button */
+    .deletelink,
+    .deletelink-box a.deletelink {
+        background: var(--danger-color);
+    }
+
+    .deletelink:hover,
+    .deletelink-box a.deletelink:hover {
+        background: #dc2626;
+    }
+
+    /* Add another button */
+    .addlink {
+        background: var(--success-color);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .addlink:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+
+    /* Tables */
+    #changelist table,
+    #result_list {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        overflow: hidden;
+    }
+
+    #changelist table thead th,
+    #result_list thead th {
+        background: var(--light-bg);
+        color: var(--dark-bg);
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    #changelist table tbody tr:hover,
+    #result_list tbody tr:hover {
+        background: #f3f4f6;
+    }
+
+    #changelist table tbody td,
+    #result_list tbody td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Links in tables */
+    #changelist table a,
+    #result_list a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    #changelist table a:hover,
+    #result_list a:hover {
+        text-decoration: underline;
+    }
+
+    /* Action dropdown */
+    #changelist-form .actions {
+        background: var(--light-bg);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    #changelist-form .actions select {
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+    }
+
+    /* Pagination */
+    .paginator {
+        background: var(--light-bg);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .paginator a {
+        color: var(--primary-color);
+        text-decoration: none;
+        padding: 0.25rem 0.5rem;
+        margin: 0 0.125rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+    }
+
+    .paginator a:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    /* Forms */
+    .form-row {
+        padding: 1rem 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .form-row label {
+        font-weight: 600;
+        color: var(--dark-bg);
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-row input[type=text],
+    .form-row input[type=password],
+    .form-row input[type=email],
+    .form-row input[type=number],
+    .form-row textarea,
+    .form-row select {
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        padding: 0.5rem 0.75rem;
+        width: 100%;
+        max-width: 600px;
+        transition: border-color 0.2s;
+    }
+
+    .form-row input:focus,
+    .form-row textarea:focus,
+    .form-row select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+    }
+
+    /* Help text */
+    .help {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Error messages */
+    .errornote {
+        background: #fef2f2;
+        border-left: 4px solid var(--danger-color);
+        color: #991b1b;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.375rem;
+    }
+
+    ul.errorlist {
+        background: #fef2f2;
+        color: #991b1b;
+        padding: 0.5rem 1rem;
+        margin: 0.5rem 0;
+        list-style: none;
+        border-radius: 0.375rem;
+        border-left: 4px solid var(--danger-color);
+    }
+
+    /* Success messages */
+    .success {
+        background: #f0fdf4;
+        border-left: 4px solid var(--success-color);
+        color: #065f46;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 0.375rem;
+    }
+
+    /* Dashboard */
+    #content-main {
+        padding: 1rem;
+    }
+
+    /* Model index */
+    .app-projects,
+    .app-risks,
+    .app-tasks,
+    .app-resources,
+    .app-auth {
+        margin-bottom: 2rem;
+    }
+
+    .app-projects table,
+    .app-risks table,
+    .app-tasks table,
+    .app-resources table,
+    .app-auth table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    /* Dashboard cards */
+    .module h2 a {
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Filter sidebar */
+    #changelist-filter {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1rem;
+    }
+
+    #changelist-filter h2 {
+        background: none;
+        color: var(--dark-bg);
+        padding: 0 0 0.5rem 0;
+        border-bottom: 2px solid var(--primary-color);
+        font-size: 1rem;
+    }
+
+    #changelist-filter h3 {
+        color: var(--dark-bg);
+        font-weight: 600;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #changelist-filter a {
+        color: #6b7280;
+        text-decoration: none;
+        display: block;
+        padding: 0.25rem 0;
+        transition: color 0.2s;
+    }
+
+    #changelist-filter a:hover {
+        color: var(--primary-color);
+    }
+
+    #changelist-filter li.selected a {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    /* Custom branding */
+    #branding h1::before {
+        content: "📊 ";
+        font-size: 1.5rem;
+    }
+
+    /* Footer */
+    #footer {
+        background: var(--light-bg);
+        border-top: 1px solid #e5e7eb;
+        padding: 1.5rem 2rem;
+        text-align: center;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        #header {
+            padding: 1rem;
+        }
+        
+        #content {
+            padding: 1rem;
+        }
+        
+        div.breadcrumbs {
+            padding: 0.5rem 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        PMO AI Assistant Admin
+    </a>
+</h1>
+{% endblock %}
+
+{% block userlinks %}
+<a href="/dashboard/" class="back-to-site" title="Return to dashboard">
+    <span>←</span> Back to Dashboard
+</a>
+{{ block.super }}
+{% endblock %}
+
+{% block footer %}
+<div id="footer">
+    <p>PMO AI Assistant - Project Management Office System</p>
+    <p style="margin-top: 0.5rem; font-size: 0.75rem;">Powered by Django Admin & Claude AI</p>
+</div>
+{% endblock %}

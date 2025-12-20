@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Reports Dashboard - PMO AI Assistant{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">
+            <i class="fas fa-chart-pie text-purple-600 mr-3"></i>Admin Reports Dashboard
+        </h1>
+        <p class="text-gray-600">Comprehensive portfolio analytics and insights</p>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+        <a href="{% url 'reports:portfolio_health' %}" class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition text-center">
+            <i class="fas fa-heartbeat text-3xl text-green-600 mb-2"></i>
+            <div class="text-sm font-semibold">Portfolio Health</div>
+        </a>
+        <a href="{% url 'reports:risk_analysis' %}" class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition text-center">
+            <i class="fas fa-exclamation-triangle text-3xl text-orange-600 mb-2"></i>
+            <div class="text-sm font-semibold">Risk Analysis</div>
+        </a>
+        <a href="{% url 'reports:budget_status' %}" class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition text-center">
+            <i class="fas fa-dollar-sign text-3xl text-blue-600 mb-2"></i>
+            <div class="text-sm font-semibold">Budget Status</div>
+        </a>
+        <a href="{% url 'reports:resource_utilization' %}" class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition text-center">
+            <i class="fas fa-users text-3xl text-indigo-600 mb-2"></i>
+            <div class="text-sm font-semibold">Resources</div>
+        </a>
+        <a href="{% url 'reports:executive_summary' %}" class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition text-center">
+            <i class="fas fa-file-alt text-3xl text-purple-600 mb-2"></i>
+            <div class="text-sm font-semibold">Executive Summary</div>
+        </a>
+        <a href="/export/" class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition text-center">
+            <i class="fas fa-download text-3xl text-gray-600 mb-2"></i>
+            <div class="text-sm font-semibold">Export Data</div>
+        </a>
+    </div>
+
+    <!-- Portfolio Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- Total Projects -->
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-purple-100 text-sm">Total Projects</p>
+                    <p class="text-4xl font-bold">{{ portfolio_stats.total_projects }}</p>
+                </div>
+                <i class="fas fa-folder-open text-5xl opacity-30"></i>
+            </div>
+        </div>
+
+        <!-- On Track -->
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm">On Track</p>
+                    <p class="text-4xl font-bold">{{ portfolio_stats.on_track }}</p>
+                    <p class="text-xs text-green-100">{{ portfolio_stats.on_track|floatformat:0 }}%</p>
+                </div>
+                <i class="fas fa-check-circle text-5xl opacity-30"></i>
+            </div>
+        </div>
+
+        <!-- At Risk -->
+        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-orange-100 text-sm">At Risk</p>
+                    <p class="text-4xl font-bold">{{ portfolio_stats.at_risk }}</p>
+                </div>
+                <i class="fas fa-exclamation-triangle text-5xl opacity-30"></i>
+            </div>
+        </div>
+
+        <!-- Delayed -->
+        <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-red-100 text-sm">Delayed</p>
+                    <p class="text-4xl font-bold">{{ portfolio_stats.delayed }}</p>
+                </div>
+                <i class="fas fa-times-circle text-5xl opacity-30"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget & Performance -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Budget Overview -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">
+                <i class="fas fa-dollar-sign text-blue-600 mr-2"></i>Budget Overview
+            </h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Total Budget:</span>
+                    <span class="font-bold text-xl">${{ budget_stats.total_budget|floatformat:0 }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Total Spent:</span>
+                    <span class="font-bold text-xl text-blue-600">${{ budget_stats.total_spent|floatformat:0 }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Remaining:</span>
+                    <span class="font-bold text-xl text-green-600">${{ budget_stats.remaining|floatformat:0 }}</span>
+                </div>
+                <div class="mt-4">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span>Utilization</span>
+                        <span class="font-semibold">{{ budget_stats.utilization_pct|floatformat:1 }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="bg-blue-600 h-3 rounded-full" style="width: {{ budget_stats.utilization_pct }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">
+                <i class="fas fa-tachometer-alt text-purple-600 mr-2"></i>Performance Metrics
+            </h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center p-4 bg-purple-50 rounded-lg">
+                    <p class="text-purple-600 text-sm mb-1">Avg SPI</p>
+                    <p class="text-3xl font-bold text-purple-700">{{ performance_stats.avg_spi|floatformat:2 }}</p>
+                </div>
+                <div class="text-center p-4 bg-blue-50 rounded-lg">
+                    <p class="text-blue-600 text-sm mb-1">Avg CPI</p>
+                    <p class="text-3xl font-bold text-blue-700">{{ performance_stats.avg_cpi|floatformat:2 }}</p>
+                </div>
+                <div class="text-center p-4 bg-green-50 rounded-lg">
+                    <p class="text-green-600 text-sm mb-1">Completion</p>
+                    <p class="text-3xl font-bold text-green-700">{{ performance_stats.avg_completion|floatformat:0 }}%</p>
+                </div>
+                <div class="text-center p-4 bg-indigo-50 rounded-lg">
+                    <p class="text-indigo-600 text-sm mb-1">Health Score</p>
+                    <p class="text-3xl font-bold text-indigo-700">{{ performance_stats.avg_health|floatformat:0 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk & Task Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <!-- Risks -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">
+                <i class="fas fa-shield-alt text-orange-600 mr-2"></i>Risk Summary
+            </h3>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Total Risks:</span>
+                    <span class="font-bold">{{ risk_stats.total_risks }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Open:</span>
+                    <span class="font-bold text-orange-600">{{ risk_stats.open_risks }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Critical:</span>
+                    <span class="font-bold text-red-600">{{ risk_stats.critical_risks }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">High:</span>
+                    <span class="font-bold text-orange-500">{{ risk_stats.high_risks }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">
+                <i class="fas fa-tasks text-blue-600 mr-2"></i>Task Summary
+            </h3>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Total Tasks:</span>
+                    <span class="font-bold">{{ task_stats.total_tasks }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Completed:</span>
+                    <span class="font-bold text-green-600">{{ task_stats.completed_tasks }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">In Progress:</span>
+                    <span class="font-bold text-blue-600">{{ task_stats.in_progress_tasks }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Overdue:</span>
+                    <span class="font-bold text-red-600">{{ task_stats.overdue_tasks }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources -->
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">
+                <i class="fas fa-users text-indigo-600 mr-2"></i>Resource Summary
+            </h3>
+            <div class="space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Total Resources:</span>
+                    <span class="font-bold">{{ resource_stats.total_resources }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Avg Utilization:</span>
+                    <span class="font-bold text-indigo-600">{{ resource_stats.avg_utilization|floatformat:0 }}%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Over-allocated:</span>
+                    <span class="font-bold text-red-600">{{ resource_stats.over_allocated }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- At-Risk Projects -->
+    {% if at_risk_projects %}
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">
+            <i class="fas fa-exclamation-circle text-red-600 mr-2"></i>Projects Requiring Attention
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Project</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Status</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Health</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Completion</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">SPI</th>
+                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for project in at_risk_projects %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3">
+                            <div class="font-semibold">{{ project.name }}</div>
+                            <div class="text-xs text-gray-500">{{ project.code }}</div>
+                        </td>
+                        <td class="px-4 py-3">
+                            {% if project.status == 'on_track' %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">On Track</span>
+                            {% elif project.status == 'at_risk' %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800">At Risk</span>
+                            {% elif project.status == 'delayed' %}
+                            <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Delayed</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3">
+                            <span class="font-semibold {% if project.health_score < 40 %}text-red-600{% elif project.health_score < 60 %}text-orange-600{% else %}text-green-600{% endif %}">
+                                {{ project.health_score }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3">{{ project.completion_percentage }}%</td>
+                        <td class="px-4 py-3">{{ project.spi }}</td>
+                        <td class="px-4 py-3">
+                            <a href="{% url 'project_detail' project.pk %}" class="text-purple-600 hover:text-purple-800">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
