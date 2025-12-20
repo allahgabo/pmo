@@ -4,224 +4,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PMO AI Assistant - Smart Project Portfolio Management</title>
+    <title>Welcome to PMO AI Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #9333ea 0%, #3b82f6 100%);
         }
-        .feature-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        .hero-pattern {
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
         }
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .fade-in {
+            animation: fadeIn 1s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body class="bg-gray-50">
     <!-- Navigation -->
-    <nav class="bg-white shadow-md fixed w-full z-50">
+    <nav class="bg-white shadow-sm fixed w-full z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <i class="fas fa-project-diagram text-3xl text-purple-600 mr-3"></i>
-                    <span class="text-2xl font-bold text-gray-900">PMO AI Assistant</span>
+                    <span class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                        PMO AI Assistant
+                    </span>
                 </div>
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="#features" class="text-gray-700 hover:text-purple-600 transition">Features</a>
-                    <a href="#demo" class="text-gray-700 hover:text-purple-600 transition">Demo</a>
-                    <a href="#tech" class="text-gray-700 hover:text-purple-600 transition">Technology</a>
-                    {% if user.is_authenticated %}
-                    <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-purple-600 transition">
-                        <i class="fas fa-tachometer-alt mr-1"></i>Dashboard
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'login' %}" 
+                       class="text-gray-700 hover:text-purple-600 font-medium transition">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Login
                     </a>
-                    <a href="{% url 'profile' %}" class="text-gray-700 hover:text-purple-600 transition">
-                        <i class="fas fa-user mr-1"></i>{{ user.username }}
+                    <a href="{% url 'register' %}" 
+                       class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition shadow-md">
+                        <i class="fas fa-user-plus mr-2"></i>Register
                     </a>
-                    <a href="{% url 'logout' %}" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </a>
-                    {% else %}
-                    <a href="{% url 'login' %}" class="text-gray-700 hover:text-purple-600 transition">Login</a>
-                    <a href="{% url 'dashboard' %}" class="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition">
-                        Get Started
-                    </a>
-                    {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="gradient-bg pt-32 pb-20 text-white">
+    <section class="gradient-bg hero-pattern pt-32 pb-20 text-white min-h-screen flex items-center">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center">
-                <h1 class="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
-                    Enterprise PMO System
-                    <br>
-                    <span class="text-purple-200">Powered by AI</span>
-                </h1>
-                <p class="text-xl md:text-2xl mb-8 text-purple-100 max-w-3xl mx-auto">
-                    Comprehensive project portfolio management with intelligent insights, 
-                    real-time analytics, and AI-driven recommendations
-                </p>
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <a href="{% url 'dashboard' %}" 
-                       class="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition shadow-lg">
-                        <i class="fas fa-rocket mr-2"></i>Launch Dashboard
-                    </a>
-                    <a href="#features" 
-                       class="bg-purple-700 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-purple-800 transition border-2 border-white">
-                        <i class="fas fa-info-circle mr-2"></i>Learn More
-                    </a>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <!-- Left Column: Text Content -->
+                <div class="text-left fade-in">
+                    <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                        Transform Your
+                        <br>
+                        <span class="text-yellow-300">Project Management</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-8 text-purple-100 leading-relaxed">
+                        AI-powered insights, real-time analytics, and intelligent 
+                        portfolio management for enterprise teams
+                    </p>
+                    
+                    <!-- CTA Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                        <a href="{% url 'register' %}" 
+                           class="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition shadow-xl text-center">
+                            <i class="fas fa-rocket mr-2"></i>Get Started Free
+                        </a>
+                        <a href="{% url 'login' %}" 
+                           class="bg-purple-700 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-800 transition border-2 border-white text-center">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Sign In
+                        </a>
+                    </div>
+
+                    <!-- Trust Indicators -->
+                    <div class="flex items-center space-x-6 text-sm text-purple-200">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle mr-2 text-green-300"></i>
+                            <span>No Credit Card Required</span>
+                        </div>
+                        <div class="flex items-center">
+                            <i class="fas fa-shield-alt mr-2 text-green-300"></i>
+                            <span>Secure & Private</span>
+                        </div>
+                    </div>
                 </div>
-                
-                <!-- Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16">
-                    <div class="text-center">
-                        <div class="text-4xl font-bold mb-2">30+</div>
-                        <div class="text-purple-200">API Endpoints</div>
+
+                <!-- Right Column: Visual -->
+                <div class="hidden lg:block float-animation">
+                    <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-2xl p-8 shadow-2xl border border-white border-opacity-20">
+                        <div class="space-y-4">
+                            <!-- Mock Dashboard Preview -->
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="text-sm font-semibold">Portfolio Health</div>
+                                    <div class="text-2xl font-bold text-green-300">92%</div>
+                                </div>
+                                <div class="w-full bg-white bg-opacity-30 rounded-full h-3">
+                                    <div class="bg-green-300 h-3 rounded-full" style="width: 92%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="text-sm font-semibold">Active Projects</div>
+                                    <div class="text-2xl font-bold text-blue-300">8</div>
+                                </div>
+                                <div class="grid grid-cols-4 gap-2">
+                                    <div class="bg-green-400 rounded h-8"></div>
+                                    <div class="bg-green-400 rounded h-8"></div>
+                                    <div class="bg-yellow-400 rounded h-8"></div>
+                                    <div class="bg-blue-400 rounded h-8"></div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                                <div class="text-sm font-semibold mb-2">AI Insights</div>
+                                <div class="text-xs opacity-90">
+                                    <i class="fas fa-robot mr-2"></i>
+                                    2 projects need attention this week
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="text-center">
-                        <div class="text-4xl font-bold mb-2">4</div>
-                        <div class="text-purple-200">User Roles</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-4xl font-bold mb-2">8K+</div>
-                        <div class="text-purple-200">Lines of Code</div>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-4xl font-bold mb-2">AI</div>
-                        <div class="text-purple-200">Powered</div>
-                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 fade-in">
+                <div class="text-center">
+                    <div class="text-4xl font-bold mb-2 text-yellow-300">AI</div>
+                    <div class="text-purple-200 text-sm">Powered Insights</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold mb-2">24/7</div>
+                    <div class="text-purple-200 text-sm">Monitoring</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold mb-2">∞</div>
+                    <div class="text-purple-200 text-sm">Projects</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-4xl font-bold mb-2 text-green-300">100%</div>
+                    <div class="text-purple-200 text-sm">Secure</div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="py-20 bg-white">
+    <section class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Powerful Features</h2>
-                <p class="text-xl text-gray-600">Everything you need for enterprise project management</p>
+                <h2 class="text-4xl font-bold text-gray-900 mb-4">Everything You Need</h2>
+                <p class="text-xl text-gray-600">Powerful features for modern project management</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-project-diagram text-purple-600 text-2xl"></i>
+                <div class="text-center p-8 rounded-xl bg-gradient-to-br from-purple-50 to-white hover:shadow-xl transition">
+                    <div class="bg-purple-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-robot text-purple-600 text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Portfolio Management</h3>
-                    <p class="text-gray-600">Track multiple projects with health scores, KPIs, and real-time status updates</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">AI Assistant</h3>
+                    <p class="text-gray-600">Get intelligent insights and recommendations powered by Claude AI</p>
                 </div>
 
                 <!-- Feature 2 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-robot text-blue-600 text-2xl"></i>
+                <div class="text-center p-8 rounded-xl bg-gradient-to-br from-blue-50 to-white hover:shadow-xl transition">
+                    <div class="bg-blue-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-chart-line text-blue-600 text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">AI-Powered Insights</h3>
-                    <p class="text-gray-600">Claude AI integration for intelligent analysis and actionable recommendations</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Real-time Analytics</h3>
+                    <p class="text-gray-600">Track KPIs, health scores, and performance metrics instantly</p>
                 </div>
 
                 <!-- Feature 3 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-chart-line text-green-600 text-2xl"></i>
+                <div class="text-center p-8 rounded-xl bg-gradient-to-br from-green-50 to-white hover:shadow-xl transition">
+                    <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-shield-alt text-green-600 text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Advanced Analytics</h3>
-                    <p class="text-gray-600">Interactive dashboards with Chart.js visualizations and performance metrics</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Risk Management</h3>
+                    <p class="text-gray-600">Identify, track, and mitigate risks with automated alerts</p>
                 </div>
 
                 <!-- Feature 4 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-shield-alt text-orange-600 text-2xl"></i>
+                <div class="text-center p-8 rounded-xl bg-gradient-to-br from-orange-50 to-white hover:shadow-xl transition">
+                    <div class="bg-orange-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-tasks text-orange-600 text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Risk Management</h3>
-                    <p class="text-gray-600">Identify, assess, and mitigate project risks with severity tracking</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Task Management</h3>
+                    <p class="text-gray-600">Organize, assign, and track tasks across all projects</p>
                 </div>
 
                 <!-- Feature 5 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-pink-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-users text-pink-600 text-2xl"></i>
+                <div class="text-center p-8 rounded-xl bg-gradient-to-br from-pink-50 to-white hover:shadow-xl transition">
+                    <div class="bg-pink-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-users text-pink-600 text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Multi-User System</h3>
-                    <p class="text-gray-600">Role-based access control with 4 user types and granular permissions</p>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Team Collaboration</h3>
+                    <p class="text-gray-600">Role-based access control for your entire team</p>
                 </div>
 
                 <!-- Feature 6 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg border border-gray-100">
-                    <div class="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mb-6">
-                        <i class="fas fa-code text-yellow-600 text-2xl"></i>
+                <div class="text-center p-8 rounded-xl bg-gradient-to-br from-indigo-50 to-white hover:shadow-xl transition">
+                    <div class="bg-indigo-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-file-export text-indigo-600 text-3xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">RESTful API</h3>
-                    <p class="text-gray-600">Comprehensive API with Swagger documentation and token authentication</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Demo Section -->
-    <section id="demo" class="py-20 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">See It In Action</h2>
-                <p class="text-xl text-gray-600">Experience the power of intelligent project management</p>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
-                <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-4 flex items-center">
-                    <div class="flex space-x-2">
-                        <div class="w-3 h-3 rounded-full bg-red-400"></div>
-                        <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
-                        <div class="w-3 h-3 rounded-full bg-green-400"></div>
-                    </div>
-                    <div class="flex-1 text-center text-white font-semibold">PMO AI Assistant Dashboard</div>
-                </div>
-                <div class="p-8 text-center">
-                    <p class="text-gray-600 mb-6">Click below to explore the live demo with sample data</p>
-                    <a href="{% url 'dashboard' %}" 
-                       class="inline-block bg-purple-600 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-purple-700 transition shadow-lg">
-                        <i class="fas fa-play mr-2"></i>Launch Demo
-                    </a>
-                    <div class="mt-8 text-sm text-gray-500">
-                        <p>Demo credentials: admin / admin123</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Technology Stack -->
-    <section id="tech" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Built With Modern Technology</h2>
-                <p class="text-xl text-gray-600">Production-ready stack for enterprise applications</p>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
-                <div class="text-center p-6">
-                    <i class="fab fa-python text-6xl text-blue-500 mb-4"></i>
-                    <h3 class="font-bold text-gray-900">Python 3.11+</h3>
-                </div>
-                <div class="text-center p-6">
-                    <i class="fas fa-server text-6xl text-green-600 mb-4"></i>
-                    <h3 class="font-bold text-gray-900">Django 5.0</h3>
-                </div>
-                <div class="text-center p-6">
-                    <i class="fas fa-database text-6xl text-blue-700 mb-4"></i>
-                    <h3 class="font-bold text-gray-900">PostgreSQL</h3>
-                </div>
-                <div class="text-center p-6">
-                    <i class="fas fa-brain text-6xl text-purple-600 mb-4"></i>
-                    <h3 class="font-bold text-gray-900">Claude AI</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-3">Reports & Export</h3>
+                    <p class="text-gray-600">Generate comprehensive reports and export data easily</p>
                 </div>
             </div>
         </div>
@@ -230,69 +229,66 @@
     <!-- CTA Section -->
     <section class="gradient-bg py-20 text-white">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-4xl font-bold mb-6">Ready to Transform Your PMO?</h2>
+            <h2 class="text-4xl font-bold mb-6">Ready to Get Started?</h2>
             <p class="text-xl mb-8 text-purple-100">
-                Start managing your project portfolio with AI-powered insights today
+                Join teams already using PMO AI Assistant to manage their projects smarter
             </p>
             <div class="flex flex-col sm:flex-row justify-center gap-4">
-                <a href="{% url 'dashboard' %}" 
-                   class="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition shadow-lg">
-                    <i class="fas fa-rocket mr-2"></i>Get Started Now
+                <a href="{% url 'register' %}" 
+                   class="bg-white text-purple-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition shadow-xl">
+                    <i class="fas fa-rocket mr-2"></i>Create Free Account
                 </a>
-                <a href="https://github.com/allahgabo/Pmo_ai_assistant" 
-                   target="_blank"
-                   class="bg-purple-700 text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-purple-800 transition border-2 border-white">
-                    <i class="fab fa-github mr-2"></i>View on GitHub
+                <a href="{% url 'login' %}" 
+                   class="bg-purple-700 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-purple-800 transition border-2 border-white">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Sign In Now
                 </a>
             </div>
+            <p class="mt-6 text-sm text-purple-200">
+                <i class="fas fa-lock mr-1"></i> Your data is secure and private
+            </p>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="bg-gray-900 text-white py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div>
-                    <h3 class="text-xl font-bold mb-4">PMO AI Assistant</h3>
-                    <p class="text-gray-400">Enterprise-grade project management with AI integration</p>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-project-diagram text-2xl text-purple-400 mr-3"></i>
+                        <span class="text-xl font-bold">PMO AI Assistant</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        Enterprise-grade project portfolio management with AI-powered insights
+                    </p>
                 </div>
                 <div>
                     <h4 class="font-bold mb-4">Quick Links</h4>
-                    <ul class="space-y-2">
-                        <li><a href="{% url 'dashboard' %}" class="text-gray-400 hover:text-white transition">Dashboard</a></li>
-                        <li><a href="{% url 'projects_list' %}" class="text-gray-400 hover:text-white transition">Projects</a></li>
-                        <li><a href="{% url 'analytics:dashboard' %}" class="text-gray-400 hover:text-white transition">Analytics</a></li>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="{% url 'login' %}" class="text-gray-400 hover:text-white transition">Login</a></li>
+                        <li><a href="{% url 'register' %}" class="text-gray-400 hover:text-white transition">Register</a></li>
+                        <li><a href="/admin/" class="text-gray-400 hover:text-white transition">Admin</a></li>
                         <li><a href="/api/" class="text-gray-400 hover:text-white transition">API Docs</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="font-bold mb-4">Resources</h4>
-                    <ul class="space-y-2">
-                        <li><a href="/api/schema/swagger-ui/" class="text-gray-400 hover:text-white transition">API Reference</a></li>
-                        <li><a href="https://github.com/allahgabo/Pmo_ai_assistant" target="_blank" class="text-gray-400 hover:text-white transition">GitHub</a></li>
-                        <li><a href="https://github.com/allahgabo/Pmo_ai_assistant/issues" target="_blank" class="text-gray-400 hover:text-white transition">Issues</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="font-bold mb-4">Connect</h4>
                     <div class="flex space-x-4">
-                        <a href="https://github.com/allahgabo" target="_blank" class="text-2xl text-gray-400 hover:text-white transition">
+                        <a href="https://github.com/allahgabo/Pmo_ai_assistant" target="_blank" 
+                           class="text-2xl text-gray-400 hover:text-white transition">
                             <i class="fab fa-github"></i>
                         </a>
-                        <a href="https://linkedin.com/in/allahgabo" target="_blank" class="text-2xl text-gray-400 hover:text-white transition">
+                        <a href="https://linkedin.com/in/allahgabo" target="_blank" 
+                           class="text-2xl text-gray-400 hover:text-white transition">
                             <i class="fab fa-linkedin"></i>
-                        </a>
-                        <a href="https://twitter.com/allahgabo" target="_blank" class="text-2xl text-gray-400 hover:text-white transition">
-                            <i class="fab fa-twitter"></i>
                         </a>
                     </div>
                 </div>
             </div>
-            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>&copy; 2025 PMO AI Assistant. Built with ❤️ by Allahgabo</p>
-                <p class="mt-2 text-sm">Licensed under MIT License</p>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
+                <p>&copy; 2025 PMO AI Assistant. Built with ❤️ using Django & Claude AI</p>
             </div>
-        </footer>
+        </div>
     </footer>
 </body>
 </html>
