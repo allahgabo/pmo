@@ -2,6 +2,9 @@ import json
 from typing import Dict, List, Any, Optional
 from decimal import Decimal
 from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def convert_decimals(obj):
@@ -70,11 +73,53 @@ QUALITY STANDARDS:
 • Address "what could go wrong" proactively"""
 
     def __init__(self):
-        self.api_key = settings.ANTHROPIC_API_KEY
+        """Initialize AI Engine with proper configuration validation"""
+        self.api_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
         self.model = getattr(settings, 'AI_MODEL', 'claude-sonnet-4-20250514')
-        # OPTIMIZED: 6000 tokens balances depth with speed
         self.max_tokens = getattr(settings, 'AI_MAX_TOKENS', 6000)
-        self.demo_mode = self.api_key == 'demo-mode'
+        
+        # Validate configuration
+        self.demo_mode = self._check_demo_mode()
+        self.client = None
+        
+        if not self.demo_mode:
+            self._initialize_client()
+    
+    def _check_demo_mode(self) -> bool:
+        """Check if AI is in demo mode"""
+        if not self.api_key:
+            logger.warning("ANTHROPIC_API_KEY not configured")
+            return True
+        
+        if self.api_key == 'demo-mode':
+            logger.info("AI Engine running in demo mode")
+            return True
+        
+        # Check for quotes around the key (common error)
+        if self.api_key.startswith("'") or self.api_key.startswith('"'):
+            logger.error("ANTHROPIC_API_KEY has quotes around it - remove quotes in environment variable")
+            self.api_key = self.api_key.strip("'\"")  # Try to fix it automatically
+        
+        if not self.api_key.startswith('sk-ant-'):
+            logger.error(f"Invalid ANTHROPIC_API_KEY format (should start with 'sk-ant-')")
+            return True
+        
+        return False
+    
+    def _initialize_client(self):
+        """Initialize Anthropic client with error handling"""
+        try:
+            from anthropic import Anthropic
+            self.client = Anthropic(api_key=self.api_key)
+            logger.info("Anthropic client initialized successfully")
+        except ImportError:
+            logger.error("anthropic package not installed. Run: pip install anthropic")
+            self.demo_mode = True
+            self.client = None
+        except Exception as e:
+            logger.error(f"Failed to initialize Anthropic client: {str(e)}")
+            self.demo_mode = True
+            self.client = None
     
     def _validate_response(self, message) -> str:
         """Validate and extract text from Claude API response"""
@@ -88,21 +133,24 @@ QUALITY STANDARDS:
     
     def _call_claude_api(self, user_message: str, stream: bool = False) -> Dict[str, Any]:
         """
-        Call Claude API with optional streaming support
+        Call Claude API with optional streaming support and comprehensive error handling
         """
         if self.demo_mode:
             return self._get_demo_response(user_message)
         
+        if not self.client:
+            logger.error("Anthropic client not initialized")
+            return self._get_error_response(
+                "Configuration Error",
+                "AI client not properly initialized. Please check your ANTHROPIC_API_KEY configuration."
+            )
+        
         try:
-            from anthropic import Anthropic
-            
-            client = Anthropic(api_key=self.api_key)
-            
             if stream:
                 # Streaming mode for better UX
                 return {
                     "stream": True,
-                    "stream_generator": client.messages.create(
+                    "stream_generator": self.client.messages.create(
                         model=self.model,
                         max_tokens=self.max_tokens,
                         system=self.SYSTEM_PROMPT,
@@ -112,7 +160,7 @@ QUALITY STANDARDS:
                 }
             else:
                 # Standard mode
-                message = client.messages.create(
+                message = self.client.messages.create(
                     model=self.model,
                     max_tokens=self.max_tokens,
                     system=self.SYSTEM_PROMPT,
@@ -123,35 +171,104 @@ QUALITY STANDARDS:
                 
                 return {
                     "response": response_text,
-                    "raw_response": True
+                    "raw_response": True,
+                    "success": True
                 }
+        
+        except ImportError as e:
+            logger.error(f"Missing dependency: {str(e)}")
+            return self._get_error_response(
+                "Configuration Error",
+                "The 'anthropic' package is not installed. Please install it with: pip install anthropic"
+            )
         
         except Exception as e:
             error_type = type(e).__name__
             error_msg = str(e)
             
-            print(f"[AI Error] {error_type}: {error_msg}")
+            logger.error(f"[AI Error] {error_type}: {error_msg}")
+            
+            # Provide user-friendly error messages based on error type
+            if "authentication" in error_msg.lower() or "api_key" in error_msg.lower():
+                user_message = "❌ Authentication failed. Please verify your ANTHROPIC_API_KEY is correct and active."
+            elif "rate_limit" in error_msg.lower() or "429" in error_msg:
+                user_message = "❌ Rate limit exceeded. Please wait a moment and try again."
+            elif "timeout" in error_msg.lower():
+                user_message = "❌ Request timed out. Please try again."
+            elif "connection" in error_msg.lower() or "network" in error_msg.lower():
+                user_message = "❌ Network error. Please check your connection and try again."
+            elif "invalid" in error_msg.lower() and "key" in error_msg.lower():
+                user_message = "❌ Invalid API key. Please check your ANTHROPIC_API_KEY configuration."
+            else:
+                user_message = f"❌ Sorry, I encountered an error: {error_msg}"
             
             return {
                 "error": True,
                 "error_type": error_type,
                 "error_message": error_msg,
-                "response": f"I encountered an error while processing your request: {error_msg}\n\nPlease try again or contact support if the issue persists."
+                "response": user_message,
+                "success": False
             }
     
     def _get_demo_response(self, user_message: str) -> Dict[str, Any]:
-        """Generate demo response based on request type"""
+        """Generate demo response when API is not configured"""
         return {
-            "response": """This is a demo mode response. Enable the Anthropic API to get detailed AI analysis.
+            "response": """## 🔴 Demo Mode Response
 
-In production mode, I would provide:
-• Comprehensive analysis with actionable insights
-• Specific implementation plans with timelines
-• Root cause investigations
-• Risk mitigation strategies with success metrics
+**Configuration Required**: Your AI features are currently disabled.
 
-To enable full functionality, configure your Anthropic API key in settings.""",
-            "demo_mode": True
+### To Enable AI Analysis:
+
+1. **Get API Key**: Visit https://console.anthropic.com/
+2. **Add to Render**:
+   - Go to Render Dashboard
+   - Select your service: `pmo-ai-assistant`
+   - Click "Environment" tab
+   - Add environment variable:
+     - Key: `ANTHROPIC_API_KEY`
+     - Value: `sk-ant-api03-your-key` (no quotes!)
+   - Save and wait for redeployment
+
+3. **Verify**: Refresh this page and try again
+
+### What Real AI Would Provide:
+• Comprehensive project analysis with metrics interpretation
+• Root cause identification and impact assessment
+• Specific, actionable recommendations with timelines
+• Risk analysis with mitigation strategies
+• Resource optimization suggestions
+• Executive summaries and strategic insights
+
+---
+
+**Need Help?** Check the configuration guide or contact support.""",
+            "demo_mode": True,
+            "success": False,
+            "configuration_help": {
+                "anthropic_console": "https://console.anthropic.com/",
+                "documentation": "https://docs.anthropic.com/",
+                "status": "API key not configured or invalid"
+            }
+        }
+    
+    def _get_error_response(self, error_type: str, message: str) -> Dict[str, Any]:
+        """Generate standardized error response"""
+        return {
+            "error": True,
+            "error_type": error_type,
+            "response": f"## ❌ {error_type}\n\n{message}\n\nPlease contact your administrator if this issue persists.",
+            "success": False
+        }
+    
+    def get_configuration_status(self) -> Dict[str, Any]:
+        """Get current configuration status for debugging"""
+        return {
+            "demo_mode": self.demo_mode,
+            "api_key_configured": bool(self.api_key and self.api_key != 'demo-mode'),
+            "client_initialized": self.client is not None,
+            "model": self.model,
+            "max_tokens": self.max_tokens,
+            "api_key_prefix": self.api_key[:10] if self.api_key and self.api_key != 'demo-mode' else None
         }
     
     def generate_project_summary(self, project_data: Dict[str, Any]) -> Dict[str, Any]:
