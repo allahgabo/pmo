@@ -5,6 +5,9 @@ from django.db.models import Count, Avg, F
 from projects.models import Project, Risk
 from projects.serializers import ProjectListSerializer
 from .service import PMOAIEngine
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectSummaryView(APIView):
@@ -37,10 +40,34 @@ class ProjectSummaryView(APIView):
         }
         
         # Generate AI summary
-        ai_engine = PMOAIEngine()
-        summary = ai_engine.generate_project_summary(project_data)
-        
-        return Response(summary)
+        try:
+            ai_engine = PMOAIEngine()
+            
+            # Check if engine is in demo mode
+            if ai_engine.demo_mode:
+                return Response({
+                    'error': True,
+                    'message': 'AI features are currently unavailable. Please configure the API key.'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            summary = ai_engine.generate_project_summary(project_data)
+            
+            # Check if AI returned an error
+            if summary.get('error', False):
+                logger.error(f"AI error in project summary: {summary.get('error_message')}")
+                return Response({
+                    'error': True,
+                    'message': summary.get('response', 'AI service temporarily unavailable')
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            return Response(summary)
+            
+        except Exception as e:
+            logger.exception(f"Exception in ProjectSummaryView: {str(e)}")
+            return Response({
+                'error': True,
+                'message': 'An error occurred while generating the summary'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class PortfolioSummaryView(APIView):
@@ -67,10 +94,32 @@ class PortfolioSummaryView(APIView):
         }
         
         # Generate AI summary
-        ai_engine = PMOAIEngine()
-        summary = ai_engine.generate_portfolio_summary(portfolio_data)
-        
-        return Response(summary)
+        try:
+            ai_engine = PMOAIEngine()
+            
+            if ai_engine.demo_mode:
+                return Response({
+                    'error': True,
+                    'message': 'AI features are currently unavailable. Please configure the API key.'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            summary = ai_engine.generate_portfolio_summary(portfolio_data)
+            
+            if summary.get('error', False):
+                logger.error(f"AI error in portfolio summary: {summary.get('error_message')}")
+                return Response({
+                    'error': True,
+                    'message': summary.get('response', 'AI service temporarily unavailable')
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            return Response(summary)
+            
+        except Exception as e:
+            logger.exception(f"Exception in PortfolioSummaryView: {str(e)}")
+            return Response({
+                'error': True,
+                'message': 'An error occurred while generating the summary'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class RiskAnalysisView(APIView):
@@ -100,10 +149,32 @@ class RiskAnalysisView(APIView):
         }
         
         # Generate AI analysis
-        ai_engine = PMOAIEngine()
-        analysis = ai_engine.analyze_risk(risk_data)
-        
-        return Response(analysis)
+        try:
+            ai_engine = PMOAIEngine()
+            
+            if ai_engine.demo_mode:
+                return Response({
+                    'error': True,
+                    'message': 'AI features are currently unavailable. Please configure the API key.'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            analysis = ai_engine.analyze_risk(risk_data)
+            
+            if analysis.get('error', False):
+                logger.error(f"AI error in risk analysis: {analysis.get('error_message')}")
+                return Response({
+                    'error': True,
+                    'message': analysis.get('response', 'AI service temporarily unavailable')
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            return Response(analysis)
+            
+        except Exception as e:
+            logger.exception(f"Exception in RiskAnalysisView: {str(e)}")
+            return Response({
+                'error': True,
+                'message': 'An error occurred while analyzing the risk'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class PMOQuestionView(APIView):
@@ -120,77 +191,106 @@ class PMOQuestionView(APIView):
             )
         
         # Gather context data
-        projects = Project.objects.all()[:5]
-        recent_projects = []
-        for p in projects:
-            recent_projects.append({
-                'name': p.name,
-                'code': p.code,
-                'status': p.status,
-                'spi': float(p.spi),
-                'cpi': float(p.cpi),
-                'completion_percentage': p.completion_percentage,
-                'health_score': p.health_score,
-            })
-        
-        context_data = {
-            'portfolio': {
-                'total_projects': Project.objects.count(),
-                'on_track': Project.objects.filter(status='on_track').count(),
-                'at_risk': Project.objects.filter(status='at_risk').count(),
-                'delayed': Project.objects.filter(status='delayed').count(),
-            },
-            'recent_projects': recent_projects
-        }
-        
-        # Get AI answer
-        ai_engine = PMOAIEngine()
-        ai_response = ai_engine.answer_pmo_question(question, context_data)
-        
-        # Format response for frontend
-        # AI might return structured JSON or a simple response
-        if isinstance(ai_response, dict):
-            if 'response' in ai_response:
-                # Simple response format - convert newlines to HTML
-                raw_text = ai_response['response']
+        try:
+            projects = Project.objects.all()[:5]
+            recent_projects = []
+            for p in projects:
+                recent_projects.append({
+                    'name': p.name,
+                    'code': p.code,
+                    'status': p.status,
+                    'spi': float(p.spi),
+                    'cpi': float(p.cpi),
+                    'completion_percentage': p.completion_percentage,
+                    'health_score': p.health_score,
+                })
+            
+            context_data = {
+                'portfolio': {
+                    'total_projects': Project.objects.count(),
+                    'on_track': Project.objects.filter(status='on_track').count(),
+                    'at_risk': Project.objects.filter(status='at_risk').count(),
+                    'delayed': Project.objects.filter(status='delayed').count(),
+                },
+                'recent_projects': recent_projects
+            }
+            
+            # Get AI answer
+            ai_engine = PMOAIEngine()
+            
+            # Check if engine is in demo mode
+            if ai_engine.demo_mode:
+                return Response({
+                    'error': True,
+                    'message': 'AI features are currently unavailable. Please configure the API key.',
+                    'answer': '❌ AI service is not configured. Please contact your administrator.'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            ai_response = ai_engine.answer_pmo_question(question, context_data)
+            
+            # CRITICAL FIX: Check if AI returned an error
+            if ai_response.get('error', False):
+                error_message = ai_response.get('error_message', 'Unknown error')
+                logger.error(f"AI error in PMO question: {error_message}")
                 
-                # Check if raw_text itself is a JSON string
-                import json
-                try:
-                    parsed = json.loads(raw_text)
-                    if isinstance(parsed, dict) and 'response' in parsed:
-                        raw_text = parsed['response']
-                except (json.JSONDecodeError, TypeError):
-                    pass
-                
+                return Response({
+                    'error': True,
+                    'message': 'AI service temporarily unavailable',
+                    'answer': f'❌ Sorry, I encountered an error: {ai_response.get("response", error_message)}'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            # Format response for frontend
+            # AI might return structured JSON or a simple response
+            if isinstance(ai_response, dict):
+                if 'response' in ai_response:
+                    # Simple response format - convert newlines to HTML
+                    raw_text = ai_response['response']
+                    
+                    # Check if raw_text itself is a JSON string
+                    import json
+                    try:
+                        parsed = json.loads(raw_text)
+                        if isinstance(parsed, dict) and 'response' in parsed:
+                            raw_text = parsed['response']
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+                    
+                    # Strip JSON wrapper if present
+                    import re
+                    raw_text = re.sub(r'^```json\s*\n?', '', raw_text, flags=re.IGNORECASE)
+                    raw_text = re.sub(r'\n?```\s*$', '', raw_text)
+                    raw_text = re.sub(r'^\{\s*"response":\s*"', '', raw_text)
+                    raw_text = re.sub(r'"\s*\}\s*$', '', raw_text)
+                    
+                    # Now convert newlines to <br>
+                    answer_text = raw_text.replace('\\n', '<br>').replace('\n', '<br>')
+                elif 'answer' in ai_response:
+                    # Already has answer key - convert newlines to HTML
+                    answer_text = ai_response['answer'].replace('\\n', '<br>').replace('\n', '<br>')
+                else:
+                    # Convert structured response to HTML
+                    answer_text = self._format_ai_response(ai_response)
+            else:
+                raw_text = str(ai_response)
                 # Strip JSON wrapper if present
                 import re
                 raw_text = re.sub(r'^```json\s*\n?', '', raw_text, flags=re.IGNORECASE)
                 raw_text = re.sub(r'\n?```\s*$', '', raw_text)
-                raw_text = re.sub(r'^\{\s*"response":\s*"', '', raw_text)
-                raw_text = re.sub(r'"\s*\}\s*$', '', raw_text)
-                
-                # Now convert newlines to <br>
                 answer_text = raw_text.replace('\\n', '<br>').replace('\n', '<br>')
-            elif 'answer' in ai_response:
-                # Already has answer key - convert newlines to HTML
-                answer_text = ai_response['answer'].replace('\\n', '<br>').replace('\n', '<br>')
-            else:
-                # Convert structured response to HTML
-                answer_text = self._format_ai_response(ai_response)
-        else:
-            raw_text = str(ai_response)
-            # Strip JSON wrapper if present
-            import re
-            raw_text = re.sub(r'^```json\s*\n?', '', raw_text, flags=re.IGNORECASE)
-            raw_text = re.sub(r'\n?```\s*$', '', raw_text)
-            answer_text = raw_text.replace('\\n', '<br>').replace('\n', '<br>')
-        
-        return Response({
-            'answer': answer_text,
-            'full_response': ai_response,
-            'is_html': True  # Flag to tell frontend this is HTML
-        })
+            
+            return Response({
+                'answer': answer_text,
+                'full_response': ai_response,
+                'is_html': True  # Flag to tell frontend this is HTML
+            })
+            
+        except Exception as e:
+            logger.exception(f"Exception in PMOQuestionView: {str(e)}")
+            return Response({
+                'error': True,
+                'message': 'An error occurred while processing your question',
+                'answer': '❌ An unexpected error occurred. Please try again.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def _format_ai_response(self, ai_response):
         """Format structured AI response into HTML with proper line breaks"""
@@ -375,10 +475,32 @@ class ProjectComparisonView(APIView):
             })
         
         # Generate comparison
-        ai_engine = PMOAIEngine()
-        comparison = ai_engine.compare_projects(projects_data)
-        
-        return Response(comparison)
+        try:
+            ai_engine = PMOAIEngine()
+            
+            if ai_engine.demo_mode:
+                return Response({
+                    'error': True,
+                    'message': 'AI features are currently unavailable. Please configure the API key.'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            comparison = ai_engine.compare_projects(projects_data)
+            
+            if comparison.get('error', False):
+                logger.error(f"AI error in project comparison: {comparison.get('error_message')}")
+                return Response({
+                    'error': True,
+                    'message': comparison.get('response', 'AI service temporarily unavailable')
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            return Response(comparison)
+            
+        except Exception as e:
+            logger.exception(f"Exception in ProjectComparisonView: {str(e)}")
+            return Response({
+                'error': True,
+                'message': 'An error occurred while comparing projects'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ExecutiveReportView(APIView):
@@ -416,7 +538,79 @@ class ExecutiveReportView(APIView):
             })
         
         # Generate executive report
-        ai_engine = PMOAIEngine()
-        report = ai_engine.generate_executive_report(portfolio_data, projects_data)
+        try:
+            ai_engine = PMOAIEngine()
+            
+            if ai_engine.demo_mode:
+                return Response({
+                    'error': True,
+                    'message': 'AI features are currently unavailable. Please configure the API key.'
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            report = ai_engine.generate_executive_report(portfolio_data, projects_data)
+            
+            if report.get('error', False):
+                logger.error(f"AI error in executive report: {report.get('error_message')}")
+                return Response({
+                    'error': True,
+                    'message': report.get('response', 'AI service temporarily unavailable')
+                }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            
+            return Response(report)
+            
+        except Exception as e:
+            logger.exception(f"Exception in ExecutiveReportView: {str(e)}")
+            return Response({
+                'error': True,
+                'message': 'An error occurred while generating the report'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# DIAGNOSTIC ENDPOINT - Keep this for testing
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import os
+
+@csrf_exempt
+def test_ai_live(request):
+    """Diagnostic endpoint - REMOVE AFTER DEBUGGING"""
+    results = {}
+    
+    # Check environment
+    api_key = os.getenv('ANTHROPIC_API_KEY')
+    results['api_key_ok'] = bool(api_key and api_key.startswith('sk-ant-'))
+    results['api_key_length'] = len(api_key) if api_key else 0
+    
+    # Check package
+    try:
+        import anthropic
+        results['package_ok'] = True
+        results['package_version'] = anthropic.__version__
+    except Exception as e:
+        results['package_ok'] = False
+        results['package_error'] = str(e)
+    
+    # Check engine
+    try:
+        from ai_engine.service import PMOAIEngine
+        engine = PMOAIEngine()
+        results['engine_demo_mode'] = engine.demo_mode
+        results['engine_client'] = engine.client is not None
         
-        return Response(report)
+        # Try API call
+        if not engine.demo_mode and engine.client:
+            test = engine.answer_pmo_question("Test", {"test": True})
+            results['api_works'] = not test.get('error', True)
+            results['response_keys'] = list(test.keys())
+            results['has_error'] = test.get('error', False)
+            if test.get('error'):
+                results['error_message'] = test.get('error_message', 'Unknown')
+        else:
+            results['api_test_skipped'] = 'Engine in demo mode or client not initialized'
+            
+    except Exception as e:
+        results['engine_error'] = str(e)
+        import traceback
+        results['engine_traceback'] = traceback.format_exc()
+    
+    return JsonResponse(results, json_dumps_params={'indent': 2})
